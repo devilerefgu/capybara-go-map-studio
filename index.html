@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capybara Go! Map Studio 🍊 Rhythm Beatmap Editor & Uploader</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="capy-theme">
+  <!-- Subtle Background Warm Steam Ambience -->
+  <div class="bg-ambience">
+    <div class="floating-bubble bubble-1"></div>
+    <div class="floating-bubble bubble-2"></div>
+    <div class="bg-steam-wave"></div>
+  </div>
+
+  <!-- Main Top Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="capy-logo-badge">
+        <svg class="logo-icon" viewBox="0 0 100 100" width="44" height="44">
+          <ellipse cx="50" cy="58" rx="38" ry="32" fill="#8d5b32" />
+          <ellipse cx="50" cy="66" rx="26" ry="18" fill="#a46d3e" />
+          <ellipse cx="50" cy="70" rx="14" ry="9" fill="#5c381c" />
+          <circle cx="44" cy="69" r="2.2" fill="#2d1b0d" />
+          <circle cx="56" cy="69" r="2.2" fill="#2d1b0d" />
+          <path d="M 30 52 Q 38 48 42 54" stroke="#2d1b0d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path d="M 58 54 Q 62 48 70 52" stroke="#2d1b0d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <circle cx="20" cy="38" r="8" fill="#6d4321" />
+          <circle cx="80" cy="38" r="8" fill="#6d4321" />
+          <ellipse cx="50" cy="27" rx="13" ry="11" fill="#f59e0b" />
+          <circle cx="50" cy="26" r="10.5" fill="#fbbf24" />
+          <path d="M 50 16 Q 54 11 58 13" stroke="#15803d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="56" cy="14" rx="4" ry="2.2" fill="#22c55e" transform="rotate(-20 56 14)"/>
+        </svg>
+        <div class="logo-text">
+          <h1>Capybara Go! <span class="badge-sub">Map Studio</span></h1>
+          <p class="tagline">Official Beatmap Editor & Audio Uploader</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Map Overview Pill -->
+    <div class="song-meta-pill" id="currentSongPill">
+      <div class="pill-dot"></div>
+      <div class="pill-info">
+        <span class="pill-title" id="pillSongTitle">Capybara Onsen Afternoon</span>
+        <span class="pill-details" id="pillSongMeta">86 BPM • 36 Notes • Normal</span>
+      </div>
+    </div>
+
+    <!-- Top Action Buttons -->
+    <div class="header-actions">
+      <button class="btn btn-sm btn-outline" id="btnOpenUploadModal">
+        <span class="btn-icon">📁</span> Upload Script / Audio
+      </button>
+      <button class="btn btn-sm btn-secondary" id="btnExportJsonFile">
+        <span class="btn-icon">💾</span> Ekspor JSON
+      </button>
+      <button class="btn btn-sm btn-accent" id="btnOpenAiModal">
+        <span class="btn-icon">🤖</span> AI Auto-Mapper
+      </button>
+      <a href="https://vercel.com/new" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-dark" id="btnVercelBadge">
+        ▲ Vercel
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Workstation Layout -->
+  <main class="studio-workstation">
+    
+    <!-- LEFT SIDEBAR: Tools, Palettes, Note Inspector, & Metronome -->
+    <aside class="studio-sidebar">
+      
+      <!-- Palette: Note Type Selection -->
+      <div class="sidebar-box">
+        <div class="box-header">
+          <span class="box-icon">🍊</span>
+          <h3>Pilih Note untuk Ditaruh</h3>
+        </div>
+        <p class="box-desc">Klik jenis note di bawah, lalu klik di grid timeline:</p>
+        
+        <div class="tool-grid">
+          <button class="tool-card active" data-tool="tap">
+            <span class="tool-icon">🍊</span>
+            <div class="tool-info">
+              <strong>Tap Note</strong>
+              <small>Ketukan biasa</small>
+            </div>
+          </button>
+          
+          <button class="tool-card" data-tool="hold">
+            <span class="tool-icon">🟡</span>
+            <div class="tool-info">
+              <strong>Hold Note</strong>
+              <small>Tahan berendam</small>
+            </div>
+          </button>
+
+          <button class="tool-card" data-tool="burst">
+            <span class="tool-icon">💥</span>
+            <div class="tool-info">
+              <strong>Citrus Burst</strong>
+              <small>Letupan aroma</small>
+            </div>
+          </button>
+        </div>
+
+        <div class="hold-duration-row" id="holdDurationSettings" style="display: none;">
+          <label>Durasi Tahan (Detik):</label>
+          <input type="number" id="holdDurationInput" class="form-input-sm" value="1.0" min="0.2" max="5.0" step="0.1">
+        </div>
+      </div>
+
+      <!-- Grid Snapping & Zoom -->
+      <div class="sidebar-box">
+        <div class="box-header">
+          <span class="box-icon">📐</span>
+          <h3>Grid & Pengaturan Snap</h3>
+        </div>
+
+        <div class="form-row-compact">
+          <label for="editSnapSelect">Snap Divisi:</label>
+          <select id="editSnapSelect" class="form-select-sm">
+            <option value="1">1/1 Beat (Penuh)</option>
+            <option value="2">1/2 Beat (Setengah)</option>
+            <option value="4" selected>1/4 Beat (Standar)</option>
+            <option value="8">1/8 Beat (Rapat)</option>
+            <option value="16">1/16 Beat (Sangat Rapat)</option>
+          </select>
+        </div>
+
+        <div class="form-row-compact">
+          <label>Zoom Timeline:</label>
+          <div class="zoom-stepper">
+            <button class="btn btn-xs btn-outline" id="btnZoomOut">➖</button>
+            <span id="zoomDisplay" class="zoom-text">1.0x</span>
+            <button class="btn btn-xs btn-outline" id="btnZoomIn">➕</button>
+          </div>
+        </div>
+
+        <div class="form-row-compact">
+          <label for="checkMetronome">Bunyi Metronom:</label>
+          <input type="checkbox" id="checkMetronome" checked>
+        </div>
+      </div>
+
+      <!-- BPM & Song Settings -->
+      <div class="sidebar-box">
+        <div class="box-header">
+          <span class="box-icon">🥁</span>
+          <h3>Tempo BPM & Durasi</h3>
+        </div>
+
+        <div class="form-row-compact">
+          <label for="inputBpm">Kecepatan (BPM):</label>
+          <input type="number" id="inputBpm" class="form-input-sm" value="86" min="40" max="240">
+        </div>
+
+        <div class="form-row-compact">
+          <label for="inputDuration">Durasi Total (s):</label>
+          <input type="number" id="inputDuration" class="form-input-sm" value="34" min="5" max="300">
+        </div>
+
+        <!-- Live Tap BPM Tool -->
+        <div class="tap-bpm-wrapper">
+          <button class="btn btn-accent btn-block btn-sm" id="btnTapBpm">
+            🐾 Ketuk Disini untuk Hitung BPM
+          </button>
+          <div class="tap-bpm-result">
+            <span>BPM Terhitung: <strong id="bpmDetectVal">86</strong></span>
+            <button class="btn btn-xs btn-primary" id="btnApplyBpm">Pasang</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Note Inspector (When a note is clicked) -->
+      <div class="sidebar-box note-inspector-box">
+        <div class="box-header">
+          <span class="box-icon">🔍</span>
+          <h3>Inspector Note Terpilih</h3>
+        </div>
+        <div id="inspectorContent" class="inspector-empty">
+          <p>Klik salah satu note di timeline untuk mengedit waktu, jalur, atau menghapusnya.</p>
+        </div>
+      </div>
+
+      <!-- Quick Batch Actions -->
+      <div class="sidebar-box">
+        <div class="box-header">
+          <span class="box-icon">⚡</span>
+          <h3>Operasi Cepat Map</h3>
+        </div>
+        <div class="quick-btn-group">
+          <button class="btn btn-sm btn-outline btn-block" id="btnMirrorLanes">
+            🪞 Balik Jalur (Mirror Lanes)
+          </button>
+          <button class="btn btn-sm btn-outline btn-block" id="btnShiftNotesForward">
+            ⏩ Geser Maju +1 Beat
+          </button>
+          <button class="btn btn-sm btn-danger btn-block" id="btnClearAllNotes">
+            🗑️ Hapus Semua Note
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT/CENTER MAIN WORKSTATION: Transport & Timeline DAW Canvas -->
+    <section class="studio-canvas-area">
+      
+      <!-- Top Transport Bar (Playback, Time Readout, Volume, & Animated Mascot) -->
+      <div class="transport-bar">
+        
+        <!-- Playback Controls -->
+        <div class="transport-controls">
+          <button class="btn btn-primary btn-round" id="btnTransportPlay">
+            <span id="transportPlayIcon">▶</span> <span id="transportPlayText">Preview Lagu (Spasi)</span>
+          </button>
+          <button class="btn btn-secondary btn-round" id="btnTransportStop">
+            ⏹ Stop
+          </button>
+        </div>
+
+        <!-- Precise Time Readout & Bar Counter -->
+        <div class="transport-readout">
+          <div class="time-main">
+            <span id="readoutCurrentTime">00:00.00</span> / <span id="readoutTotalTime">00:34.00</span>
+          </div>
+          <div class="bar-beat-sub" id="readoutBarBeat">
+            Bar 1 • Beat 1.00
+          </div>
+        </div>
+
+        <!-- Audio Source & Synth Toggle -->
+        <div class="transport-audio-status">
+          <span class="status-indicator-dot" id="audioStatusDot"></span>
+          <span id="audioStatusLabel" class="status-label">Synth Audio Onsen Aktif</span>
+          <button class="btn btn-xs btn-outline" id="btnToggleSynthMute">🔊 Suara</button>
+        </div>
+
+        <!-- Mini Capybara Mascot Bobbing to BPM -->
+        <div class="transport-mascot-card">
+          <div class="mascot-avatar" id="mascotAvatar">
+            <svg viewBox="0 0 100 100" width="38" height="38">
+              <ellipse cx="50" cy="58" rx="38" ry="32" fill="#8d5b32" />
+              <ellipse cx="50" cy="66" rx="26" ry="18" fill="#a46d3e" />
+              <ellipse cx="50" cy="70" rx="14" ry="9" fill="#5c381c" />
+              <circle cx="44" cy="69" r="2.2" fill="#2d1b0d" />
+              <circle cx="56" cy="69" r="2.2" fill="#2d1b0d" />
+              <path d="M 30 52 Q 38 48 42 54" stroke="#2d1b0d" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M 58 54 Q 62 48 70 52" stroke="#2d1b0d" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <ellipse cx="50" cy="27" rx="13" ry="11" fill="#f59e0b" />
+              <circle cx="50" cy="26" r="10.5" fill="#fbbf24" />
+            </svg>
+          </div>
+          <div class="mascot-status">
+            <span class="mascot-mood" id="mascotMood">Santai Berendam</span>
+            <small id="mascotNotesCount">36 notes terpola</small>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Timeline Main Container (Multi-Lane Canvas with Sticky Header & Smooth Scroll) -->
+      <div class="timeline-wrapper-card">
+        
+        <!-- Lane Track Legend Indicators -->
+        <div class="lane-legend-bar">
+          <div class="legend-tag tag-lane-0">
+            <span class="legend-dot dot-0"></span>
+            <strong>Lane 0:</strong> 🍊 Jeruk Yuzu (Key D)
+          </div>
+          <div class="legend-tag tag-lane-1">
+            <span class="legend-dot dot-1"></span>
+            <strong>Lane 1:</strong> 💧 Air Onsen (Key F)
+          </div>
+          <div class="legend-tag tag-lane-2">
+            <span class="legend-dot dot-2"></span>
+            <strong>Lane 2:</strong> 🐾 Jejak Paw (Key J)
+          </div>
+          <div class="legend-tag tag-lane-3">
+            <span class="legend-dot dot-3"></span>
+            <strong>Lane 3:</strong> ⭐ Jeruk Emas (Key K)
+          </div>
+        </div>
+
+        <!-- Scrollable Timeline Canvas -->
+        <div class="timeline-viewport" id="timelineViewport">
+          <canvas id="timelineCanvas" width="2800" height="420"></canvas>
+        </div>
+
+        <!-- Timeline Bottom Help Bar -->
+        <div class="timeline-statusbar">
+          <div class="help-item">
+            <kbd>Klik Kiri</kbd> Taruh / Pilih Note
+          </div>
+          <div class="help-item">
+            <kbd>Double Klik</kbd> Hapus Note
+          </div>
+          <div class="help-item">
+            <kbd>Spasi</kbd> Putar / Jeda Preview Audio
+          </div>
+          <div class="help-item">
+            <kbd>Klik Ruler Atas</kbd> Pindahkan Jarum Waktu (Scrub)
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Preset Song Switcher -->
+      <div class="quick-presets-strip">
+        <span class="strip-label">Lagu Bawaan Siap Edit:</span>
+        <button class="btn btn-xs btn-outline preset-pill active" id="btnLoadPresetOnsen">
+          ♨️ Capybara Onsen (86 BPM • Lo-Fi)
+        </button>
+        <button class="btn btn-xs btn-outline preset-pill" id="btnLoadPresetRush">
+          ⚡ Capybara Citrus Rush (132 BPM • Upbeat)
+        </button>
+        <button class="btn btn-xs btn-outline preset-pill" id="btnCreateBlankMap">
+          📄 Buat Map Kosong Baru
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL 1: UPLOAD & EXPORT HUB ==================== -->
+  <div class="modal-overlay" id="uploadModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">📁</span>
+          <h2>Upload Script & File Lagu</h2>
+        </div>
+        <button class="modal-close-btn" id="btnCloseUploadModal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <div class="upload-drop-grid">
+          <!-- Drop Zone 1: Beatmap Script JSON -->
+          <div class="drop-card" id="dropZoneJson">
+            <div class="drop-icon">📜</div>
+            <h3>Upload Script Beatmap (.json)</h3>
+            <p>Pilih file JSON beatmap buatanmu atau hasil dari AI</p>
+            <input type="file" id="fileInputJson" accept=".json" style="display: none;">
+            <button class="btn btn-sm btn-primary" id="btnPickJsonFile">Pilih File JSON</button>
+          </div>
+
+          <!-- Drop Zone 2: Audio File MP3 / WAV -->
+          <div class="drop-card" id="dropZoneAudio">
+            <div class="drop-icon">🎵</div>
+            <h3>Upload File Audio (.mp3 / .wav / .ogg)</h3>
+            <p>Opsional: Pasang musik aslimu agar bisa didengar saat mengedit map</p>
+            <input type="file" id="fileInputAudio" accept="audio/*" style="display: none;">
+            <button class="btn btn-sm btn-secondary" id="btnPickAudioFile">Pilih File Lagu</button>
+          </div>
+        </div>
+
+        <div class="modal-divider"></div>
+
+        <!-- Export Actions -->
+        <div class="export-section">
+          <h3>💾 Simpan & Download Map</h3>
+          <p>Unduh file script JSON untuk disimpan ke komputermu atau dipakai di game Capybara Go:</p>
+          <div class="export-btn-row">
+            <button class="btn btn-primary" id="btnModalExportJson">
+              💾 Unduh File Script (.json)
+            </button>
+            <button class="btn btn-outline" id="btnModalCopyJson">
+              📋 Salin Kode JSON ke Clipboard
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: AI AUTO-MAPPER & PROMPT ==================== -->
+  <div class="modal-overlay" id="aiModalOverlay">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">🤖</span>
+          <h2>AI Auto-Mapper: Buat Note Otomatis</h2>
+        </div>
+        <button class="modal-close-btn" id="btnCloseAiModal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <div class="ai-modal-layout">
+          
+          <!-- Column 1: API Key & Direct Generation -->
+          <div class="ai-box">
+            <h3>🔑 1. API Key AI (Google Gemini / OpenAI)</h3>
+            <p class="ai-sub">Disimpan lokal di browsermu (tidak dikirim ke server manapun).</p>
+            
+            <div class="form-group-mb">
+              <label>Provider AI:</label>
+              <select id="aiProviderSelect" class="form-select">
+                <option value="gemini" selected>Google Gemini (Gratis di Google AI Studio)</option>
+                <option value="openai">OpenAI (GPT-4o-mini / GPT-4o)</option>
+              </select>
+            </div>
+
+            <div class="form-group-mb">
+              <label>API Key:</label>
+              <div class="input-with-toggle">
+                <input type="password" id="aiApiKeyInput" class="form-input" placeholder="Tempel API Key di sini (AIzaSy... / sk-...)">
+                <button class="btn btn-sm btn-outline" id="btnToggleApiKey">👁️</button>
+              </div>
+              <small class="help-text">
+                Belum punya API key? Buat gratis dalam 1 menit di 
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com</a> (Tanpa kartu kredit).
+              </small>
+            </div>
+
+            <div class="modal-divider"></div>
+
+            <h3>🎛️ 2. Konfigurasi Lagu untuk AI</h3>
+            <div class="form-group-mb">
+              <label>Judul / Tema:</label>
+              <input type="text" id="aiSongTitle" class="form-input" value="Capybara River Dance">
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group-mb">
+                <label>BPM:</label>
+                <input type="number" id="aiBpm" class="form-input" value="96" min="60" max="180">
+              </div>
+              <div class="form-group-mb">
+                <label>Durasi (detik):</label>
+                <input type="number" id="aiDuration" class="form-input" value="30" min="10" max="120">
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group-mb">
+                <label>Tingkat Kesulitan:</label>
+                <select id="aiDifficulty" class="form-select">
+                  <option value="Easy">Santai (Easy)</option>
+                  <option value="Normal" selected>Normal (Standard)</option>
+                  <option value="Hard">Lincah (Hard)</option>
+                  <option value="Master">Citrus Frenzy (Master)</option>
+                </select>
+              </div>
+              <div class="form-group-mb">
+                <label>Kepadatan Note:</label>
+                <select id="aiDensity" class="form-select">
+                  <option value="relaxed">Renggang (Cozy)</option>
+                  <option value="balanced" selected>Seimbang</option>
+                  <option value="dense">Rapat (Banyak Note)</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-block" id="btnRunAiGenerate">
+              ✨ Generate Beatmap Otomatis (via API Key)
+            </button>
+            <button class="btn btn-accent btn-block mt-2" id="btnRunProceduralGenerate">
+              🎲 Buat Otomatis Tanpa API Key (Generator Algoritmik)
+            </button>
+
+            <!-- Loading status -->
+            <div class="ai-status-indicator" id="aiStatusBox" style="display: none;">
+              <div class="spinner"></div>
+              <span id="aiStatusText">Menghubungi AI untuk mengkomposisi lagu Capybara...</span>
+            </div>
+          </div>
+
+          <!-- Column 2: Prompt Master Template for External AIs -->
+          <div class="ai-box">
+            <h3>📋 3. Master Prompt untuk ChatGPT / Claude / DeepSeek</h3>
+            <p class="ai-sub">Salin instruksi ini dan berikan ke AI favoritmu di web lain:</p>
+
+            <textarea id="aiPromptTextArea" class="prompt-code-area" readonly rows="12"></textarea>
+            
+            <div class="prompt-action-row">
+              <button class="btn btn-sm btn-outline" id="btnRefreshPromptTemplate">🔄 Perbarui Prompt</button>
+              <button class="btn btn-sm btn-primary" id="btnCopyPromptTemplate">📋 Salin Prompt</button>
+            </div>
+
+            <div class="modal-divider"></div>
+
+            <h4>Sudah dapat jawaban JSON dari AI?</h4>
+            <p class="ai-sub">Tempel kode JSON di sini untuk langsung memuat lagunya:</p>
+            <textarea id="aiPasteJsonInput" class="form-textarea" placeholder="Paste { 'formatVersion': 'capybara-go-v1', ... } di sini" rows="3"></textarea>
+            <button class="btn btn-sm btn-accent btn-block mt-2" id="btnApplyPastedJson">
+              📥 Muat Script JSON Ini ke Editor
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="capy-toast" id="capyToast"></div>
+
+  <!-- Hidden Custom Audio Element -->
+  <audio id="customAudioElement" preload="auto" style="display: none;"></audio>
+
+  <script src="app.js"></script>
+</body>
+</html>
