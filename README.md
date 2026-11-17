@@ -1,83 +1,43 @@
-# 🍊 Capybara Go! Beat Studio
+# 🍊 Capybara Go! Map Studio
 
-**Capybara Go! Beat Studio** adalah aplikasi web pembuat dan pemain beatmap musik ritme bertema petualangan santai **Capybara Go**. Didesain khusus dengan atmosfer onsen air hangat, bambu alami, buah jeruk yuzu, dan jejak kaki capybara yang imut (bukan kloningan osu! yang bernuansa neon atau techno futuristik).
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdevilerefgu%2Fcapybara-go-map-studio)
 
-Aplikasi ini dilengkapi dengan:
-- **Game Mode Ritme Interaktif** (4 Jalur: D, F, J, K / Touch / Klik) dengan animasi Capybara yang berendam dan bergoyang sesuai tempo (BPM) musik, efek percikan air, yuzu pop, dan sistem skor akurasi.
-- **Editor Beatmap Multi-Lane Visual** dengan grid snap (1/1, 1/2, 1/4, 1/8 beat), zoom, scrubber audio, metronom, dan deteksi tempo otomatis (Tap BPM Tempo Calculator).
-- **Audio Synthesizer Terintegrasi (Web Audio API)** sehingga lagu langsung memiliki alunan melodi Lo-Fi, bass hangat, dan instrumen drum akustik tanpa perlu file MP3 eksternal (kamu juga bisa mengunggah file MP3/WAV milikmu sendiri jika mau!).
-- **AI Auto-Mapper Bawaan**: Masukkan API Key (Google Gemini atau OpenAI) untuk menyuruh AI merancang tangga nada dan ritme lagu secara otomatis saat kamu sedang santai.
-- **Generator Algoritmik Cepat (Tanpa API Key)**: Buat lagu dan beatmap instan hanya dengan memilih BPM dan tingkat kesulitan.
-- **Format Script Universal (`capybara-go-v1`)**: File format JSON yang mudah dibaca oleh AI manapun (ChatGPT, Claude, Gemini, DeepSeek, Grok) beserta panduan prompt siap pakai.
+**Capybara Go! Map Studio** adalah aplikasi web khusus untuk **mengedit dan mengunggah beatmap (peta nada/ritme musik)** untuk game **Capybara Go**. Didesain dengan estetika onsen bambu hangat, buah jeruk yuzu, dan maskot capybara yang imut tanpa nuansa rumit atau permainan falling-notes arcade.
+
+Repository GitHub: **https://github.com/devilerefgu/capybara-go-map-studio**
 
 ---
 
-## 🚀 Cara Menjalankan Aplikasi
+## ⚡ Deploy ke Vercel (1-Click)
 
-Kamu bisa langsung menjalankan web ini dengan cara yang sangat mudah:
+Kamu bisa langsung mendeploy web ini ke Vercel secara gratis:
 
-### Cara 1: Buka Langsung di Browser (Paling Cepat)
-1. Buka folder `C:\CapybaraBeatStudio` di File Explorer Windows.
-2. Klik ganda file `index.html` (akan terbuka langsung di Google Chrome, Microsoft Edge, atau browser favoritmu).
-3. Selesai! Web siap digunakan 100% secara offline tanpa perlu instalasi server atau `npm`.
-
-### Cara 2: Menjalankan via Local Web Server (Opsional)
-Jika kamu memiliki Python atau Node.js dan ingin menjalankannya sebagai server lokal:
-```bash
-# Menggunakan Python:
-cd C:\CapybaraBeatStudio
-python -m http.server 8080
-
-# Lalu buka browser di: http://localhost:8080
-```
+1. Klik tombol **Deploy with Vercel** di atas, atau buka tautan ini:  
+   👉 **[Deploy ke Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdevilerefgu%2Fcapybara-go-map-studio)**
+2. Masuk / Sign in menggunakan akun GitHub kamu (`devilerefgu`).
+3. Beri nama proyek (misal: `capybara-go-map-studio`) lalu klik tombol **"Deploy"**.
+4. Dalam 10-15 detik, website editor beatmap kamu sudah online dengan domain gratis seperti `capybara-go-map-studio.vercel.app`!
 
 ---
 
-## 📂 Struktur File di `C:\CapybaraBeatStudio`
+## 🎛️ Fitur Khusus Edit & Upload Map:
 
-```text
-C:\CapybaraBeatStudio\
-├── index.html                  # Halaman utama aplikasi web
-├── styles.css                  # Desain visual hangat bertema Capybara Onsen
-├── app.js                      # Mesin game, Web Audio synth, editor, & AI
-├── sample-capybara-onsen.json  # Contoh lagu 1: Lo-Fi Onsen Chill (86 BPM)
-├── sample-citrus-rush.json     # Contoh lagu 2: Upbeat Dance Rush (132 BPM)
-├── AI_PROMPT_GUIDE.md          # Panduan lengkap instruksi prompt untuk semua AI
-└── README.md                   # Petunjuk penggunaan ini
-```
-
----
-
-## 🎮 Kontrol Game & Jalur (Lanes)
-
-| Jalur (Lane) | Tombol Keyboard | Simbol | Efek Suara | Karakteristik |
-|:---:|:---:|:---:|:---:|:---|
-| **Lane 0** | <kbd>D</kbd> atau <kbd>1</kbd> | 🍊 | `yuzu_pop` | Jeruk Yuzu segar melompat di atas air |
-| **Lane 1** | <kbd>F</kbd> atau <kbd>2</kbd> | 💧 | `water_splash` | Percikan air hangat onsen yang menenangkan |
-| **Lane 2** | <kbd>J</kbd> atau <kbd>3</kbd> | 🐾 | `paw_tap` | Jejak ketukan kaki kayu bambu |
-| **Lane 3** | <kbd>K</kbd> atau <kbd>4</kbd> | ⭐ | `citrus_burst` | Letupan aroma jeruk emas bernilai tinggi |
-
-- **Spasi**: Memulai / Menjeda (Play / Pause) lagu.
-- Kamu juga bisa mengklik langsung tombol di bagian bawah layar jika menggunakan layar sentuh atau mouse.
-
----
-
-## 🤖 Menggunakan Fitur AI Auto-Mapper
-
-### Opsi A: Menggunakan API Key Langsung di Web
-1. Buka tab **"🤖 AI Auto-Mapper"** di navigasi atas.
-2. Masukkan API Key kamu:
-   - **Google Gemini**: Dapatkan gratis tanpa kartu kredit di [Google AI Studio](https://aistudio.google.com/app/apikey).
-   - **OpenAI**: Menggunakan API Key OpenAI (GPT-4o / GPT-4o-mini).
-3. Atur judul lagu, BPM, durasi (misal 30 detik), dan tingkat kesulitan (Easy/Normal/Hard/Master).
-4. Klik **"✨ Generate Beatmap Otomatis (via API Key)"**. AI akan langsung menghasilkan melodi dan ketukan, lalu memuatnya langsung ke game!
-
-### Opsi B: Menggunakan ChatGPT, Claude, atau DeepSeek
-1. Buka tab **"🤖 AI Auto-Mapper"** lalu lihat kolom sebelah kanan (**Master Prompt**).
-2. Klik tombol **"📋 Salin Prompt ke Clipboard"**.
-3. Buka ChatGPT, Claude, atau DeepSeek dan paste prompt tersebut.
-4. Salin kode JSON yang dihasilkan AI, lalu paste ke kotak **"Quick Paste JSON"** di web dan klik **"📥 Muat Script JSON Ini"**!
-5. Atau kamu juga bisa melihat panduan selengkapnya di file [AI_PROMPT_GUIDE.md](file:///C:/CapybaraBeatStudio/AI_PROMPT_GUIDE.md).
-
-### Opsi C: Generator Algoritmik Instan (Tanpa API Key)
-- Jika kamu tidak memiliki API key saat ini, cukup klik **"🎲 Buat Otomatis Tanpa API Key"**. Mesin matematika bawaan web ini akan menyusun lagu bertema santai beserta ketukan nada yang sinkron secara instan!
+1. **Multi-Lane Visual DAW Timeline**:
+   - 4 Jalur Note (Lane 0: 🍊 Yuzu, Lane 1: 💧 Onsen, Lane 2: 🐾 Paw, Lane 3: ⭐ Citrus).
+   - Pengaturan Grid Snap: 1/1, 1/2, 1/4 (standar), 1/8, dan 1/16 Beat.
+   - Zoom timeline, Scrubber penunjuk waktu, dan ketukan metronom bawaan.
+2. **Note Inspector & Palet**:
+   - Pilihan note: **Tap Note**, **Hold Note** (dengan durasi tahan), dan **Citrus Burst**.
+   - Klik note manapun di timeline untuk melihat inspector detailnya (bisa ganti waktu, ganti jalur, atau hapus).
+   - Double klik note di timeline untuk langsung menghapusnya.
+3. **Audio Synthesizer & MP3 Uploader**:
+   - Lagu bawaan langsung mengeluarkan suara instrumen akor Lo-Fi & drum akustik via Web Audio API.
+   - Bisa mengunggah file musik sendiri (`.mp3`, `.wav`, `.ogg`) untuk dijadikan panduan mapping!
+4. **AI Auto-Mapper Terintegrasi**:
+   - Masukkan **Google Gemini API Key** (gratis di [Google AI Studio](https://aistudio.google.com/app/apikey)) atau **OpenAI API Key**.
+   - Tentukan BPM, durasi, dan tingkat kesulitan, lalu klik *Generate* agar AI yang menaruh note-nya secara otomatis.
+   - Generator Algoritmik Instan: Buat pola note otomatis tanpa API key.
+   - Master Prompt siap pakai untuk di-copy ke ChatGPT, Claude, atau DeepSeek.
+5. **Import & Ekspor Mudah**:
+   - Upload file script beatmap format standar `.json`.
+   - Download dan salin script ke clipboard hanya dengan 1 klik.
