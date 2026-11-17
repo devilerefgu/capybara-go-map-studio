@@ -3,305 +3,499 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capybara Studio — Pro Rhythm Beatmap Editor</title>
+  <title>capy! — Beatmap Hub & Rhythm Map Studio</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fredoka:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 </head>
-<body class="studio-dark">
+<body class="osu-theme">
 
-  <!-- TOP APP NAV / HEADER -->
-  <header class="studio-header">
-    <div class="header-brand">
-      <div class="brand-avatar">
-        <svg viewBox="0 0 100 100" width="34" height="34">
-          <ellipse cx="50" cy="58" rx="38" ry="32" fill="#a46d3e" />
-          <ellipse cx="50" cy="68" rx="26" ry="17" fill="#6d4321" />
-          <ellipse cx="50" cy="71" rx="14" ry="8" fill="#452814" />
-          <circle cx="44" cy="70" r="2.2" fill="#2d1b0d" />
-          <circle cx="56" cy="70" r="2.2" fill="#2d1b0d" />
-          <path d="M 30 52 Q 38 48 42 54" stroke="#2d1b0d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-          <path d="M 58 54 Q 62 48 70 52" stroke="#2d1b0d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-          <ellipse cx="50" cy="27" rx="13" ry="11" fill="#f59e0b" />
-          <circle cx="50" cy="26" r="10.5" fill="#fbbf24" />
-        </svg>
+  <!-- ==================== TOP NAVIGATION BAR (osu! Style) ==================== -->
+  <header class="osu-navbar">
+    <div class="nav-left">
+      <!-- capy! circular logo (inspired by osu! pink badge) -->
+      <div class="osu-logo-bubble" id="navLogoBtn" title="Kembali ke Beatmap Hub">
+        <span class="logo-text">capy!</span>
       </div>
-      <div class="brand-meta">
-        <div class="brand-title">CAPYBARA // <span class="accent-text">BEAT STUDIO</span></div>
-        <div class="song-selector-wrap">
-          <select id="headerSongSelect" class="song-select-dropdown">
-            <option value="kimi-no-na-wa" selected>🌸 RADWIMPS — Nandemonaiya (Kimi no Na wa) [PRO MAP]</option>
-            <option value="onsen">♨️ Capybara Onsen Afternoon (Lo-Fi 86 BPM)</option>
-            <option value="rush">⚡ Capybara Citrus Rush! (Upbeat 132 BPM)</option>
-            <option value="blank">📄 + Buat Map Kosong Baru</option>
-          </select>
-        </div>
+
+      <!-- Main Navigation Menu -->
+      <nav class="osu-nav-links">
+        <button class="nav-tab-btn active" data-view="hub">
+          <span class="tab-icon">🌐</span> BEATMAPS
+        </button>
+        <button class="nav-tab-btn" data-view="editor">
+          <span class="tab-icon">✏️</span> STUDIO EDIT
+        </button>
+        <button class="nav-tab-btn ai-tab-btn" data-view="ai">
+          <span class="tab-icon">🤖</span> AI AUTO-MAPPER
+        </button>
+      </nav>
+    </div>
+
+    <!-- Active Song Pill in Header -->
+    <div class="nav-active-pill" id="navActivePill">
+      <div class="pill-pip"></div>
+      <div class="pill-text">
+        <strong id="headerSongTitle">Nandemonaiya (なんでもないや)</strong>
+        <small id="headerSongMeta">RADWIMPS • ★ 5.4 Master • 220 notes</small>
       </div>
     </div>
 
-    <!-- TRANSPORT CONTROL CENTER (FL Studio / Logic Pro Style) -->
-    <div class="transport-center">
-      <div class="transport-cluster">
-        <button class="transport-btn main-play-btn" id="btnTransportPlay" title="Play / Pause (Spasi)">
-          <span id="transportPlayIcon">▶</span>
-        </button>
-        <button class="transport-btn" id="btnTransportStop" title="Stop & Reset (Esc)">
-          ⏹
-        </button>
-      </div>
-
-      <!-- Digital Display LCD -->
-      <div class="lcd-counter">
-        <div class="lcd-time">
-          <span id="lcdCurrentTime" class="lcd-digits">00:00.00</span>
-          <span class="lcd-sep">/</span>
-          <span id="lcdTotalTime" class="lcd-digits-sub">03:01.00</span>
-        </div>
-        <div class="lcd-bars">
-          <span id="lcdBarBeat" class="lcd-bar-text">BAR 01 • BEAT 1.0</span>
-          <span class="lcd-badge" id="lcdBpmBadge">86 BPM</span>
-          <span class="lcd-badge badge-notes" id="lcdNotesCount">220 NOTES</span>
-        </div>
-      </div>
-
-      <!-- Quick Audio Toggles -->
-      <div class="transport-quick-toggles">
-        <button class="icon-toggle-btn active" id="btnToggleMetronome" title="Metronome On/Off">
-          <span class="icon">⏲️</span> METRO
-        </button>
-        <button class="icon-toggle-btn active" id="btnToggleAudioMute" title="Mute/Unmute Audio">
-          <span class="icon" id="muteIcon">🔊</span> SOUND
-        </button>
-      </div>
-    </div>
-
-    <!-- HEADER RIGHT ACTIONS -->
-    <div class="header-right-actions">
-      <button class="btn btn-primary btn-sm" id="btnOpenUploadModal">
-        <span class="btn-icon">📁</span> Upload Script / Audio
+    <div class="nav-right">
+      <button class="btn btn-sm btn-primary" id="btnHeaderUpload">
+        <span class="btn-icon">📤</span> Upload Map
       </button>
-      <button class="btn btn-secondary btn-sm" id="btnExportJsonFile">
-        <span class="btn-icon">💾</span> Export .JSON
-      </button>
-      <button class="btn btn-ai btn-sm" id="btnOpenAiModal">
-        <span class="btn-icon">✨</span> AI Auto-Mapper
-      </button>
-      <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdevilerefgu%2Fcapybara-go-map-studio" target="_blank" rel="noopener noreferrer" class="btn btn-vercel btn-sm">
-        ▲ Deploy to Vercel
+      <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdevilerefgu%2Fcapybara-go-map-studio" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-vercel">
+        ▲ Vercel
       </a>
     </div>
   </header>
 
-  <!-- MAIN STUDIO WORKSTATION -->
-  <main class="studio-main">
+  <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+  <main class="osu-main-viewport">
     
-    <!-- LEFT CONTROL DOCK -->
-    <aside class="studio-dock">
+    <!-- ************************************************************
+         VIEW 1: BEATMAP LISTING HUB (osu.ppy.sh/beatmapsets Style)
+         ************************************************************ -->
+    <section id="view-hub" class="view-panel active">
       
-      <!-- PALETTE: NOTE TOOL SELECTION -->
-      <div class="dock-section">
-        <div class="dock-title">
-          <span>NOTE PALETTE</span>
-          <span class="dock-badge">ACTIVE TOOL</span>
-        </div>
-        <div class="palette-tools">
-          <button class="palette-btn active" data-tool="tap">
-            <div class="palette-badge-icon icon-yuzu">🍊</div>
-            <div class="palette-btn-meta">
-              <strong>Tap Note</strong>
-              <small>Single Hit [Key 1]</small>
-            </div>
-          </button>
-
-          <button class="palette-btn" data-tool="hold">
-            <div class="palette-badge-icon icon-onsen">🟡</div>
-            <div class="palette-btn-meta">
-              <strong>Hold Note</strong>
-              <small>Sustained Soak [Key 2]</small>
-            </div>
-          </button>
-
-          <button class="palette-btn" data-tool="burst">
-            <div class="palette-badge-icon icon-citrus">💥</div>
-            <div class="palette-btn-meta">
-              <strong>Citrus Burst</strong>
-              <small>Bonus Accent [Key 3]</small>
-            </div>
-          </button>
+      <!-- Hub Header & Filters -->
+      <div class="hub-hero-banner">
+        <div class="hero-content">
+          <h1>Jelajahi & Download Beatmap Komunitas</h1>
+          <p>Temukan beatmap buatan kreator lain, dengarkan pratinjau audio instan, download file scriptnya, atau buka langsung di Studio untuk diedit!</p>
         </div>
 
-        <div class="dock-slider-row" id="holdDurationSettings" style="display: none;">
-          <label>Hold Duration:</label>
-          <div class="slider-input-group">
-            <input type="range" id="holdDurationSlider" min="0.2" max="4.0" step="0.1" value="1.0">
-            <span id="holdDurationVal" class="mono-val">1.0s</span>
+        <!-- Search & Filter Controls -->
+        <div class="hub-filter-bar">
+          <div class="search-box-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="hubSearchInput" class="search-input" placeholder="Cari judul lagu, artis, atau mapper... (misal: Kimi no Na wa, RADWIMPS, Onsen...)">
+          </div>
+
+          <div class="filter-pills-row">
+            <div class="category-pills">
+              <button class="filter-pill active" data-category="all">Semua Map</button>
+              <button class="filter-pill" data-category="ranked">Ranked / Unggulan</button>
+              <button class="filter-pill" data-category="loved">Loved Komunitas</button>
+              <button class="filter-pill" data-category="custom">Custom Uploads</button>
+            </div>
+
+            <div class="sort-selector">
+              <label>Urutkan:</label>
+              <select id="hubSortSelect" class="sort-select">
+                <option value="popularity" selected>Paling Populer</option>
+                <option value="difficulty">Tingkat Kesulitan (Stars)</option>
+                <option value="bpm">BPM</option>
+                <option value="newest">Terbaru</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- GRID & TIMING SETTINGS -->
-      <div class="dock-section">
-        <div class="dock-title">
-          <span>GRID & SNAPPING</span>
-          <span class="dock-badge">QUANTIZE</span>
-        </div>
-        <div class="dock-control-row">
-          <label for="editSnapSelect">Snap Division:</label>
-          <select id="editSnapSelect" class="dock-select">
-            <option value="1">1/1 Beat (Whole)</option>
-            <option value="2">1/2 Beat (Half)</option>
-            <option value="4" selected>1/4 Beat (Quarter)</option>
-            <option value="8">1/8 Beat (Eighth)</option>
-            <option value="16">1/16 Beat (Sixteenth)</option>
-          </select>
-        </div>
-
-        <div class="dock-control-row">
-          <label>Timeline Zoom:</label>
-          <div class="zoom-stepper-pro">
-            <button class="stepper-btn" id="btnZoomOut">➖</button>
-            <span id="zoomDisplay" class="mono-val">1.0x</span>
-            <button class="stepper-btn" id="btnZoomIn">➕</button>
-          </div>
-        </div>
+      <!-- Beatmap Cards Grid (Authentic osu! card structure) -->
+      <div class="beatmap-grid-container" id="beatmapGridContainer">
+        <!-- Rendered dynamically by app.js -->
       </div>
 
-      <!-- BPM & TEMPO ENGINE -->
-      <div class="dock-section">
-        <div class="dock-title">
-          <span>TEMPO & METADATA</span>
-          <span class="dock-badge">SYNC</span>
-        </div>
-        <div class="dock-control-row">
-          <label for="inputBpm">Song BPM:</label>
-          <input type="number" id="inputBpm" class="dock-input-num" value="86" min="40" max="240">
-        </div>
-        <div class="dock-control-row">
-          <label for="inputDuration">Duration (s):</label>
-          <input type="number" id="inputDuration" class="dock-input-num" value="181" min="5" max="600">
-        </div>
+    </section>
 
-        <!-- Tap Tempo Pad -->
-        <div class="tap-pad-wrap">
-          <button class="tap-pad-btn" id="btnTapBpm">
-            <span class="tap-dot"></span> TAP TEMPO (BPM)
-          </button>
-          <div class="tap-pad-readout">
-            <span>Detected: <strong id="bpmDetectVal">86</strong> BPM</span>
-            <button class="btn btn-xs btn-primary" id="btnApplyBpm">APPLY</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SELECTED NOTE INSPECTOR -->
-      <div class="dock-section inspector-section">
-        <div class="dock-title">
-          <span>NOTE INSPECTOR</span>
-          <span class="dock-badge" id="inspectorStatusBadge">NONE</span>
-        </div>
-        <div id="inspectorContent" class="inspector-empty">
-          <p>Klik note manapun di timeline untuk membuka editor properti presisi.</p>
-        </div>
-      </div>
-
-      <!-- BATCH EDIT TOOLS -->
-      <div class="dock-section">
-        <div class="dock-title">
-          <span>BATCH OPERATIONS</span>
-        </div>
-        <div class="batch-btn-grid">
-          <button class="btn btn-xs btn-dark-outline" id="btnMirrorLanes">
-            🪞 Mirror Tracks
-          </button>
-          <button class="btn btn-xs btn-dark-outline" id="btnShiftNotesForward">
-            ⏩ Shift +1 Beat
-          </button>
-          <button class="btn btn-xs btn-danger-dark" id="btnClearAllNotes">
-            🗑️ Clear Notes
-          </button>
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- RIGHT WORKSTATION: TIMELINE SEQUENCER CANVAS -->
-    <section class="studio-sequencer">
+    <!-- ************************************************************
+         VIEW 2: BEATMAP STUDIO (osu! Lazer DAW Style Editor)
+         ************************************************************ -->
+    <section id="view-editor" class="view-panel">
       
-      <!-- TIMELINE VIEWPORT HEADER & TRACK LABELS -->
-      <div class="sequencer-toolbar">
-        <div class="track-header-pill track-pill-0">
-          <span class="track-color-pip pip-0"></span>
-          <span class="track-key-badge">D</span>
-          <span class="track-name">🍊 Track 0: Yuzu</span>
+      <!-- Studio Top Transport Bar -->
+      <div class="studio-transport-header">
+        
+        <!-- Play / Stop & Speed -->
+        <div class="transport-cluster-left">
+          <button class="transport-circle-btn play-btn" id="btnTransportPlay" title="Play / Pause (Spasi)">
+            <span id="transportPlayIcon">▶</span>
+          </button>
+          <button class="transport-circle-btn" id="btnTransportStop" title="Stop & Kembali ke Awal (Esc)">
+            ⏹
+          </button>
+
+          <!-- osu! Playback Speed Multiplier (0.5x, 0.75x, 1x) -->
+          <div class="speed-switcher" title="Kecepatan Pratinjau Lagu">
+            <button class="speed-btn" data-speed="0.5">0.5x</button>
+            <button class="speed-btn" data-speed="0.75">0.75x</button>
+            <button class="speed-btn active" data-speed="1.0">1.0x</button>
+          </div>
         </div>
-        <div class="track-header-pill track-pill-1">
-          <span class="track-color-pip pip-1"></span>
-          <span class="track-key-badge">F</span>
-          <span class="track-name">💧 Track 1: Onsen</span>
+
+        <!-- LCD Digital Counter -->
+        <div class="transport-lcd-display">
+          <div class="lcd-time-row">
+            <span id="lcdCurrentTime" class="lcd-time-main">00:00.00</span>
+            <span class="lcd-time-sep">/</span>
+            <span id="lcdTotalTime" class="lcd-time-total">03:01.00</span>
+          </div>
+          <div class="lcd-sub-row">
+            <span id="lcdBarBeat" class="lcd-bar-val">BAR 01 • BEAT 1.0</span>
+            <span class="lcd-badge-bpm" id="lcdBpmBadge">86 BPM</span>
+            <span class="lcd-badge-notes" id="lcdNotesCount">220 NOTES</span>
+          </div>
         </div>
-        <div class="track-header-pill track-pill-2">
-          <span class="track-color-pip pip-2"></span>
-          <span class="track-key-badge">J</span>
-          <span class="track-name">🐾 Track 2: Paw</span>
+
+        <!-- Toggles: Metronome & Audio -->
+        <div class="transport-cluster-right">
+          <button class="toggle-pill-btn active" id="btnToggleMetronome" title="Metronome On/Off [M]">
+            <span class="pill-icon">⏲️</span> METRO
+          </button>
+          <button class="toggle-pill-btn active" id="btnToggleAudioMute" title="Mute/Unmute Audio">
+            <span class="pill-icon" id="muteIcon">🔊</span> SOUND
+          </button>
+          <button class="btn btn-sm btn-primary" id="btnQuickExport">
+            💾 Unduh .JSON
+          </button>
         </div>
-        <div class="track-header-pill track-pill-3">
-          <span class="track-color-pip pip-3"></span>
-          <span class="track-key-badge">K</span>
-          <span class="track-name">⭐ Track 3: Citrus</span>
-        </div>
+
       </div>
 
-      <!-- SCROLLABLE CANVAS SEQUENCER -->
-      <div class="sequencer-viewport" id="timelineViewport">
-        <canvas id="timelineCanvas" width="4200" height="460"></canvas>
-      </div>
+      <!-- Studio Main Workstation Layout -->
+      <div class="studio-workspace-grid">
+        
+        <!-- LEFT SIDEBAR: Tools, Snap, Inspector -->
+        <aside class="editor-side-dock">
+          
+          <!-- Palette: Hit Objects / Tools -->
+          <div class="dock-card">
+            <div class="dock-card-header">
+              <span>HIT OBJECTS</span>
+              <span class="hotkey-hint">[1] [2] [3]</span>
+            </div>
+            <div class="tool-list">
+              <button class="tool-btn-pro active" data-tool="tap">
+                <div class="tool-pip pip-yuzu">🍊</div>
+                <div class="tool-meta">
+                  <strong>Tap (Hit Circle)</strong>
+                  <small>Ketukan biasa [Key 1]</small>
+                </div>
+              </button>
 
-      <!-- FOOTER STATUS & SHORTCUTS -->
-      <footer class="sequencer-footer">
-        <div class="footer-left-status">
-          <span class="active-audio-indicator" id="footerAudioBadge">🎵 Audio Source: audio/kimi-no-na-wa.mp3</span>
+              <button class="tool-btn-pro" data-tool="hold">
+                <div class="tool-pip pip-onsen">🟡</div>
+                <div class="tool-meta">
+                  <strong>Hold (Slider)</strong>
+                  <small>Tahan berendam [Key 2]</small>
+                </div>
+              </button>
+
+              <button class="tool-btn-pro" data-tool="burst">
+                <div class="tool-pip pip-citrus">💥</div>
+                <div class="tool-meta">
+                  <strong>Burst (Spinner)</strong>
+                  <small>Letupan aksen [Key 3]</small>
+                </div>
+              </button>
+            </div>
+
+            <div class="hold-slider-box" id="holdDurationSettings" style="display: none;">
+              <div class="slider-label-row">
+                <label>Slider Duration:</label>
+                <span id="holdDurationVal" class="mono-badge">1.0s</span>
+              </div>
+              <input type="range" id="holdDurationSlider" min="0.2" max="4.0" step="0.1" value="1.0">
+            </div>
+          </div>
+
+          <!-- Grid Quantize / Beat Snap (osu! colors: Red=1/2, Blue=1/4, Yellow=1/8) -->
+          <div class="dock-card">
+            <div class="dock-card-header">
+              <span>BEAT SNAP DIVISOR</span>
+              <span class="snap-color-indicator" id="snapColorIndicator">1/4</span>
+            </div>
+            <div class="snap-selector-row">
+              <select id="editSnapSelect" class="pro-select">
+                <option value="1">1/1 Beat (Whole Note)</option>
+                <option value="2">1/2 Beat (Half Note - Red)</option>
+                <option value="4" selected>1/4 Beat (Quarter Note - Blue)</option>
+                <option value="8">1/8 Beat (Eighth Note - Yellow)</option>
+                <option value="16">1/16 Beat (Sixteenth Note - Purple)</option>
+              </select>
+            </div>
+            <div class="zoom-row">
+              <label>Timeline Zoom:</label>
+              <div class="zoom-stepper">
+                <button class="stepper-btn" id="btnZoomOut">➖</button>
+                <span id="zoomDisplay" class="mono-badge">1.0x</span>
+                <button class="stepper-btn" id="btnZoomIn">➕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Song Tempo & Metadata -->
+          <div class="dock-card">
+            <div class="dock-card-header">
+              <span>TEMPO & TIMING</span>
+            </div>
+            <div class="form-row-compact">
+              <label for="inputBpm">BPM:</label>
+              <input type="number" id="inputBpm" class="pro-input-num" value="86" min="40" max="240">
+            </div>
+            <div class="form-row-compact">
+              <label for="inputDuration">Durasi (s):</label>
+              <input type="number" id="inputDuration" class="pro-input-num" value="181" min="5" max="600">
+            </div>
+
+            <!-- Tap BPM Pad -->
+            <div class="tap-pad-widget">
+              <button class="tap-button" id="btnTapBpm">
+                🐾 TAP TEMPO DISINI
+              </button>
+              <div class="tap-result-row">
+                <span>Terdeteksi: <strong id="bpmDetectVal">86</strong> BPM</span>
+                <button class="btn btn-xs btn-primary" id="btnApplyBpm">Pasang</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Note Inspector -->
+          <div class="dock-card inspector-card">
+            <div class="dock-card-header">
+              <span>NOTE INSPECTOR</span>
+              <span class="inspector-badge" id="inspectorStatusBadge">NONE</span>
+            </div>
+            <div id="inspectorContent" class="inspector-empty-wrap">
+              <p>Klik note manapun di timeline untuk mengedit waktu, jalur track, atau menghapusnya.</p>
+            </div>
+          </div>
+
+          <!-- Batch Operations -->
+          <div class="dock-card">
+            <div class="dock-card-header">
+              <span>BATCH OPERASI</span>
+            </div>
+            <div class="batch-grid">
+              <button class="btn btn-xs btn-dark" id="btnMirrorLanes">
+                🪞 Mirror Tracks
+              </button>
+              <button class="btn btn-xs btn-dark" id="btnShiftNotesForward">
+                ⏩ Shift +1 Beat
+              </button>
+              <button class="btn btn-xs btn-danger-dark" id="btnClearAllNotes">
+                🗑️ Clear All Notes
+              </button>
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- RIGHT TIMELINE SEQUENCER (Canvas & Tracks) -->
+        <section class="sequencer-main-area">
+          
+          <!-- Sequencer Track Legend Bar -->
+          <div class="sequencer-track-legend">
+            <div class="track-legend-pill track-0">
+              <span class="pip pip-0"></span>
+              <span class="kbd-badge">D</span>
+              <span class="track-label">🍊 Track 0: Yuzu</span>
+            </div>
+            <div class="track-legend-pill track-1">
+              <span class="pip pip-1"></span>
+              <span class="kbd-badge">F</span>
+              <span class="track-label">💧 Track 1: Onsen</span>
+            </div>
+            <div class="track-legend-pill track-2">
+              <span class="pip pip-2"></span>
+              <span class="kbd-badge">J</span>
+              <span class="track-label">🐾 Track 2: Paw</span>
+            </div>
+            <div class="track-legend-pill track-3">
+              <span class="pip pip-3"></span>
+              <span class="kbd-badge">K</span>
+              <span class="track-label">⭐ Track 3: Citrus</span>
+            </div>
+          </div>
+
+          <!-- Canvas Viewport -->
+          <div class="sequencer-canvas-viewport" id="timelineViewport">
+            <canvas id="timelineCanvas" width="4200" height="460"></canvas>
+          </div>
+
+          <!-- Sequencer Bottom Status & Hotkeys -->
+          <footer class="sequencer-bottom-bar">
+            <div class="bar-left-audio">
+              <span class="audio-source-tag" id="footerAudioBadge">🎵 Audio: audio/kimi-no-na-wa.mp3</span>
+            </div>
+            <div class="bar-right-hotkeys">
+              <span><kbd>Klik Grid</kbd> Tambah Note</span>
+              <span><kbd>Klik Note</kbd> Inspect</span>
+              <span><kbd>Double Klik / Del</kbd> Hapus</span>
+              <span><kbd>Klik Ruler</kbd> Pindah Waktu</span>
+              <span><kbd>Spasi</kbd> Play / Pause</span>
+            </div>
+          </footer>
+
+        </section>
+
+      </div>
+    </section>
+
+    <!-- ************************************************************
+         VIEW 3: AI AUTO-MAPPER ("KALO MAGER PASANG API KEY")
+         ************************************************************ -->
+    <section id="view-ai" class="view-panel">
+      
+      <div class="ai-hub-container">
+        <div class="ai-hub-hero">
+          <div class="ai-hero-pill">✨ FITUR AI CO-PILOT UNTUK YANG LAGI MAGER</div>
+          <h2>Mager Taruh Ratusan Note Manual? Pasang API Key & Biarkan AI yang Buat! 🍊</h2>
+          <p>
+            Cukup masukkan API Key kamu (Google Gemini gratis di Google AI Studio atau OpenAI), tentukan konsep lagumu, dan AI akan otomatis menganalisis ritme, ketukan drum, dan vokal untuk menyusun beatmap yang siap dimainkan!
+          </p>
         </div>
-        <div class="footer-shortcuts">
-          <span class="shortcut-tag"><kbd>Click Grid</kbd> Place Note</span>
-          <span class="shortcut-tag"><kbd>Click Note</kbd> Inspect</span>
-          <span class="shortcut-tag"><kbd>Double-Click</kbd> Delete</span>
-          <span class="shortcut-tag"><kbd>Click Ruler</kbd> Scrub Time</span>
-          <span class="shortcut-tag"><kbd>Space</kbd> Play / Pause</span>
+
+        <div class="ai-hub-grid">
+          
+          <!-- Column 1: API Direct Auto-Mapping -->
+          <div class="ai-studio-card">
+            <div class="card-header-styled">
+              <span class="badge-num">01</span>
+              <div>
+                <h3>Pengaturan API Key & Pembuatan Otomatis</h3>
+                <p>Disimpan secara privat di browsermu (tidak dikirim ke pihak ketiga manapun)</p>
+              </div>
+            </div>
+
+            <div class="pro-form-group">
+              <label>Pilih Model / Provider:</label>
+              <select id="aiProviderSelect" class="pro-input">
+                <option value="gemini" selected>Google Gemini 2.5 Flash (Gratis di Google AI Studio - Disarankan!)</option>
+                <option value="openai">OpenAI (GPT-4o-mini)</option>
+              </select>
+            </div>
+
+            <div class="pro-form-group">
+              <label>API Key:</label>
+              <div class="input-with-button">
+                <input type="password" id="aiApiKeyInput" class="pro-input" placeholder="Tempel API Key di sini (AIzaSy... / sk-...)">
+                <button class="btn btn-xs btn-dark" id="btnToggleApiKey">👁️</button>
+              </div>
+              <small class="pro-help">
+                Belum punya API key? Buat gratis dalam 1 menit di 
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com</a> (Tanpa kartu kredit).
+              </small>
+            </div>
+
+            <div class="card-divider"></div>
+
+            <div class="pro-form-group">
+              <label>Judul & Deskripsi Beatmap:</label>
+              <input type="text" id="aiSongTitle" class="pro-input" value="Kimi no Na wa - Nandemonaiya Theme">
+            </div>
+
+            <div class="pro-form-row">
+              <div class="pro-form-group">
+                <label>BPM:</label>
+                <input type="number" id="aiBpm" class="pro-input" value="86">
+              </div>
+              <div class="pro-form-group">
+                <label>Durasi (detik):</label>
+                <input type="number" id="aiDuration" class="pro-input" value="181">
+              </div>
+            </div>
+
+            <div class="pro-form-row">
+              <div class="pro-form-group">
+                <label>Tingkat Kesulitan (Difficulty):</label>
+                <select id="aiDifficulty" class="pro-input">
+                  <option value="Easy">★ 1.8 Easy (Santai)</option>
+                  <option value="Normal">★ 2.8 Normal</option>
+                  <option value="Hard">★ 4.2 Hard (Lincah)</option>
+                  <option value="Master" selected>★ 5.4 Master / Insane (Anime Pro)</option>
+                </select>
+              </div>
+              <div class="pro-form-group">
+                <label>Kepadatan Note (Density):</label>
+                <select id="aiDensity" class="pro-input">
+                  <option value="relaxed">Renggang (Cozy)</option>
+                  <option value="balanced" selected>Seimbang</option>
+                  <option value="dense">Rapat (Banyak Ketukan)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="ai-action-buttons">
+              <button class="btn btn-primary btn-block btn-lg" id="btnRunAiGenerate">
+                ✨ Generate Beatmap Otomatis (via API Key)
+              </button>
+              <button class="btn btn-dark btn-block mt-2" id="btnRunProceduralGenerate">
+                🎲 Auto-Generate Algoritmik (Tanpa API Key)
+              </button>
+            </div>
+
+            <div class="ai-status-indicator" id="aiStatusBox" style="display: none;">
+              <div class="pro-spinner"></div>
+              <span id="aiStatusText">AI sedang merancang ritme beatmap...</span>
+            </div>
+          </div>
+
+          <!-- Column 2: Prompt Master Template for External AIs -->
+          <div class="ai-studio-card">
+            <div class="card-header-styled">
+              <span class="badge-num">02</span>
+              <div>
+                <h3>Master Prompt untuk ChatGPT / Claude / DeepSeek</h3>
+                <p>Salin instruksi ini jika ingin menyuruh AI di luar web untuk membuatkan file script</p>
+              </div>
+            </div>
+
+            <textarea id="aiPromptTextArea" class="pro-prompt-code" readonly rows="12"></textarea>
+
+            <div class="prompt-action-bar">
+              <button class="btn btn-xs btn-dark" id="btnRefreshPromptTemplate">🔄 Perbarui Prompt</button>
+              <button class="btn btn-xs btn-primary" id="btnCopyPromptTemplate">📋 Salin Prompt ke Clipboard</button>
+            </div>
+
+            <div class="quick-paste-box">
+              <h4>Sudah dapat respon JSON dari AI?</h4>
+              <p>Tempel kode JSON yang diberikan AI di bawah ini untuk langsung memuat lagunya ke Studio:</p>
+              <textarea id="aiPasteJsonInput" class="pro-input-textarea" placeholder="Paste { 'formatVersion': 'capybara-go-v1', ... } di sini" rows="3"></textarea>
+              <button class="btn btn-sm btn-primary btn-block mt-2" id="btnApplyPastedJson">
+                📥 Muat Script JSON Ini ke Studio
+              </button>
+            </div>
+          </div>
+
         </div>
-      </footer>
+      </div>
 
     </section>
 
   </main>
 
-  <!-- ==================== MODAL 1: UPLOAD & EXPORT ==================== -->
+  <!-- ==================== MODAL: UPLOAD BEATMAP / AUDIO ==================== -->
   <div class="modal-overlay" id="uploadModalOverlay">
-    <div class="modal-window">
-      <div class="modal-window-header">
-        <div class="modal-title-wrap">
-          <span class="modal-icon">📁</span>
-          <h3>Upload Script / File Audio</h3>
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="modal-icon">📤</span>
+          <h3>Upload Beatmap Script / Lagu Audio</h3>
         </div>
-        <button class="modal-close" id="btnCloseUploadModal">&times;</button>
+        <button class="modal-close-btn" id="btnCloseUploadModal">&times;</button>
       </div>
 
-      <div class="modal-window-body">
-        <div class="drop-grid-pro">
+      <div class="modal-body">
+        <div class="upload-drop-grid">
           
-          <!-- Drop Card 1: Script JSON -->
-          <div class="drop-zone-pro" id="dropZoneJson">
-            <div class="drop-zone-icon">📜</div>
+          <!-- Drop Zone 1: Beatmap JSON -->
+          <div class="drop-card" id="dropZoneJson">
+            <div class="drop-icon">📜</div>
             <h4>Upload Script Beatmap (.json)</h4>
-            <p>Tarik & lepas file script JSON atau klik untuk memilih file</p>
+            <p>Pilih file script beatmap buatanmu atau hasil download dari kreator lain</p>
             <input type="file" id="fileInputJson" accept=".json" style="display: none;">
             <button class="btn btn-sm btn-primary" id="btnPickJsonFile">Pilih File JSON</button>
           </div>
 
-          <!-- Drop Card 2: Audio File -->
-          <div class="drop-zone-pro" id="dropZoneAudio">
-            <div class="drop-zone-icon">🎵</div>
-            <h4>Upload Lagu Audio (.mp3 / .wav / .ogg)</h4>
+          <!-- Drop Zone 2: Audio File -->
+          <div class="drop-card" id="dropZoneAudio">
+            <div class="drop-icon">🎵</div>
+            <h4>Upload Musik Sendiri (.mp3 / .wav)</h4>
             <p>Pasang audio kustom untuk diselaraskan dengan beatmap</p>
             <input type="file" id="fileInputAudio" accept="audio/*" style="display: none;">
             <button class="btn btn-sm btn-secondary" id="btnPickAudioFile">Pilih File Lagu</button>
@@ -309,20 +503,19 @@
 
         </div>
 
-        <div class="modal-line"></div>
+        <div class="modal-divider"></div>
 
-        <!-- Export Actions -->
         <div class="export-banner">
-          <div class="export-info">
-            <h4>Unduh Beatmap (.json)</h4>
-            <p>Simpan map buatanmu dalam format standar capybara-go-v1.</p>
+          <div>
+            <h4>Unduh Beatmap Aktif (.json)</h4>
+            <p>Simpan map buatanmu dalam format universal capybara-go-v1</p>
           </div>
-          <div class="export-btns">
-            <button class="btn btn-primary btn-sm" id="btnModalExportJson">
-              💾 Download JSON
+          <div class="export-actions">
+            <button class="btn btn-sm btn-primary" id="btnModalExportJson">
+              💾 Unduh JSON
             </button>
-            <button class="btn btn-dark-outline btn-sm" id="btnModalCopyJson">
-              📋 Copy to Clipboard
+            <button class="btn btn-sm btn-dark" id="btnModalCopyJson">
+              📋 Salin ke Clipboard
             </button>
           </div>
         </div>
@@ -331,134 +524,10 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 2: AI AUTO-MAPPER ==================== -->
-  <div class="modal-overlay" id="aiModalOverlay">
-    <div class="modal-window modal-window-wide">
-      <div class="modal-window-header">
-        <div class="modal-title-wrap">
-          <span class="modal-icon">✨</span>
-          <h3>AI Beatmap Composer & Auto-Mapper</h3>
-        </div>
-        <button class="modal-close" id="btnCloseAiModal">&times;</button>
-      </div>
-
-      <div class="modal-window-body">
-        <div class="ai-studio-grid">
-          
-          <!-- Left: Direct API Engine -->
-          <div class="ai-card-pro">
-            <div class="ai-card-header">
-              <span class="step-num">01</span>
-              <div>
-                <h4>Generate Langsung via API Key</h4>
-                <p>Mendukung Google Gemini (Gratis) & OpenAI</p>
-              </div>
-            </div>
-
-            <div class="form-group-pro">
-              <label>Pilih Provider:</label>
-              <select id="aiProviderSelect" class="pro-input">
-                <option value="gemini" selected>Google Gemini 2.5 Flash (Gratis di Google AI Studio)</option>
-                <option value="openai">OpenAI (GPT-4o-mini)</option>
-              </select>
-            </div>
-
-            <div class="form-group-pro">
-              <label>API Key:</label>
-              <div class="pro-input-wrap">
-                <input type="password" id="aiApiKeyInput" class="pro-input" placeholder="Tempel API Key (AIzaSy... / sk-...)">
-                <button class="btn btn-xs btn-dark-outline" id="btnToggleApiKey">👁️</button>
-              </div>
-              <small class="pro-hint">
-                Dapatkan gratis tanpa kartu kredit di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
-              </small>
-            </div>
-
-            <div class="form-group-pro">
-              <label>Judul / Konsep Lagu:</label>
-              <input type="text" id="aiSongTitle" class="pro-input" value="Kimi no Na wa - Theme">
-            </div>
-
-            <div class="form-row-pro">
-              <div>
-                <label>BPM:</label>
-                <input type="number" id="aiBpm" class="pro-input" value="86">
-              </div>
-              <div>
-                <label>Durasi (detik):</label>
-                <input type="number" id="aiDuration" class="pro-input" value="181">
-              </div>
-            </div>
-
-            <div class="form-row-pro">
-              <div>
-                <label>Difficulty:</label>
-                <select id="aiDifficulty" class="pro-input">
-                  <option value="Normal">Normal</option>
-                  <option value="Hard">Hard</option>
-                  <option value="Master" selected>Master (Anime Pro)</option>
-                </select>
-              </div>
-              <div>
-                <label>Kepadatan Note:</label>
-                <select id="aiDensity" class="pro-input">
-                  <option value="balanced" selected>Seimbang</option>
-                  <option value="dense">Rapat (Banyak Note)</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="ai-button-row">
-              <button class="btn btn-primary btn-block" id="btnRunAiGenerate">
-                ✨ Generate via API Key
-              </button>
-              <button class="btn btn-dark-outline btn-block mt-2" id="btnRunProceduralGenerate">
-                🎲 Auto-Generate Algoritmik (Tanpa Key)
-              </button>
-            </div>
-
-            <div class="ai-loading-bar" id="aiStatusBox" style="display: none;">
-              <div class="pro-spinner"></div>
-              <span id="aiStatusText">AI sedang merancang ritme beatmap...</span>
-            </div>
-          </div>
-
-          <!-- Right: Master Prompt & Quick Paste -->
-          <div class="ai-card-pro">
-            <div class="ai-card-header">
-              <span class="step-num">02</span>
-              <div>
-                <h4>Prompt untuk ChatGPT / Claude / DeepSeek</h4>
-                <p>Salin instruksi ini dan berikan ke AI pilihanmu</p>
-              </div>
-            </div>
-
-            <textarea id="aiPromptTextArea" class="pro-code-box" readonly rows="10"></textarea>
-
-            <div class="prompt-btn-bar">
-              <button class="btn btn-xs btn-dark-outline" id="btnRefreshPromptTemplate">🔄 Refresh Prompt</button>
-              <button class="btn btn-xs btn-primary" id="btnCopyPromptTemplate">📋 Salin Prompt</button>
-            </div>
-
-            <div class="quick-paste-box">
-              <h5>Sudah dapat JSON dari AI?</h5>
-              <p>Tempel output JSON di sini untuk langsung memuat ke editor:</p>
-              <textarea id="aiPasteJsonInput" class="pro-input-textarea" placeholder="Paste { 'formatVersion': 'capybara-go-v1', ... }" rows="3"></textarea>
-              <button class="btn btn-sm btn-primary btn-block mt-2" id="btnApplyPastedJson">
-                📥 Muat Script JSON Ini
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOAST NOTIFICATION -->
+  <!-- Notification Toast -->
   <div class="capy-toast" id="capyToast"></div>
 
-  <!-- HTML5 AUDIO PLAYER FOR LOCAL MP3 & CUSTOM AUDIO -->
+  <!-- Hidden Audio Player for Preview & Playback -->
   <audio id="customAudioElement" src="audio/kimi-no-na-wa.mp3" preload="auto" style="display: none;"></audio>
 
   <script src="app.js"></script>

@@ -1,12 +1,13 @@
 /**
  * ===================================================================
- * Capybara Studio — Master Pro Beatmap DAW Application
- * Architected for Precision Timing, Multi-Track Sequencing & AI Mapping
+ * capy! — Master Rhythm Beatmap Hub & Studio Application
+ * Architecture: osu! Beatmapsets Hub + osu! Lazer DAW Sequencer + AI
  * ===================================================================
  */
 
 // Application Global State
 const state = {
+  currentView: 'hub', // 'hub', 'editor', 'ai'
   isPlaying: false,
   currentTime: 0,
   playbackSpeed: 1.0,
@@ -19,14 +20,14 @@ const state = {
   lastMetronomeBeat: -1,
   selectedNoteId: null,
   tapBpmTimes: [],
-  isCustomAudio: true,
+  previewAudioId: null,
   audioElement: null,
 
-  // Active Song Data
+  // Active Song Loaded in Studio
   song: null
 };
 
-// 4 Tracks Identity Configuration
+// 4 Tracks Identity (D, F, J, K)
 const TRACKS = [
   { index: 0, key: 'D', name: 'Yuzu', color: '#f59e0b', sfx: 'yuzu_pop', icon: '🍊' },
   { index: 1, key: 'F', name: 'Onsen', color: '#00b4d8', sfx: 'water_splash', icon: '💧' },
@@ -45,7 +46,109 @@ const NOTE_FREQS = {
 };
 
 /* ===================================================================
-   1. AUDIO ENGINE & SOUND EFFECTS (WEB AUDIO API)
+   1. COMMUNITY BEATMAP CATALOG (osu.ppy.sh/beatmapsets Style)
+   =================================================================== */
+
+const COMMUNITY_BEATMAPS = [
+  {
+    id: 'kimi-no-na-wa',
+    title: 'Nandemonaiya (なんでもないや)',
+    artist: 'RADWIMPS',
+    genre: 'Anime OST / Rock Ballad',
+    category: 'ranked',
+    bpm: 86,
+    duration: 181.0,
+    difficulty: 'Master',
+    starRating: 5.4,
+    notesCount: 220,
+    author: 'CapyMapper Pro',
+    playCount: 14820,
+    favCount: 3410,
+    audioSource: 'audio/kimi-no-na-wa.mp3',
+    coverImage: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)',
+    description: 'Soundtrack legendaris dari film anime Kimi no Na wa (Your Name). Beatmap ritmis berkualitas tinggi dengan akurasi ketukan vokal dan klimaks chorus emosional!',
+    jsonFile: 'sample-kimi-no-na-wa.json'
+  },
+  {
+    id: 'onsen-afternoon',
+    title: 'Capybara Onsen Afternoon',
+    artist: 'Capy Chillhop Collective',
+    genre: 'Lo-Fi / Cozy Chill',
+    category: 'ranked',
+    bpm: 86,
+    duration: 34.0,
+    difficulty: 'Normal',
+    starRating: 2.8,
+    notesCount: 36,
+    author: 'CapyDev',
+    playCount: 8940,
+    favCount: 1850,
+    audioSource: null,
+    coverImage: 'linear-gradient(135deg, #451a03 0%, #78350f 50%, #b45309 100%)',
+    description: 'Lagu santai berendam di air hangat onsen dengan aroma jeruk yuzu yang segar. Sangat cocok untuk pemanasan.',
+    jsonFile: 'sample-capybara-onsen.json'
+  },
+  {
+    id: 'citrus-rush',
+    title: 'Capybara Citrus Rush!',
+    artist: 'DJ Capy & The Crew',
+    genre: 'Speed Dance / Citrus',
+    category: 'loved',
+    bpm: 132,
+    duration: 30.0,
+    difficulty: 'Hard',
+    starRating: 4.6,
+    notesCount: 88,
+    author: 'DJ Capy',
+    playCount: 11200,
+    favCount: 2280,
+    audioSource: null,
+    coverImage: 'linear-gradient(135deg, #831843 0%, #be185d 50%, #f43f5e 100%)',
+    description: 'Lagu bersemangat saat Capybara berlari mengumpulkan jeruk yuzu emas melintasi sungai bambu!',
+    jsonFile: 'sample-citrus-rush.json'
+  },
+  {
+    id: 'bamboo-walk',
+    title: 'Bamboo River Walk',
+    artist: 'Capy Forest Ensemble',
+    genre: 'Acoustic / Melodic',
+    category: 'loved',
+    bpm: 92,
+    duration: 42.0,
+    difficulty: 'Hard',
+    starRating: 3.5,
+    notesCount: 64,
+    author: 'BambooMaster',
+    playCount: 6450,
+    favCount: 1320,
+    audioSource: null,
+    coverImage: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%)',
+    description: 'Petualangan melintasi sungai bambu di pagi hari yang cerah dengan ketukan ritmis kayu dan lonceng air.',
+    jsonFile: 'sample-bamboo-walk.json'
+  },
+  {
+    id: 'watermelon-fest',
+    title: 'Summer Watermelon Festival',
+    artist: 'Capy Melons',
+    genre: 'Summer Breeze',
+    category: 'custom',
+    bpm: 78,
+    duration: 36.0,
+    difficulty: 'Easy',
+    starRating: 1.8,
+    notesCount: 28,
+    author: 'MelonLover',
+    playCount: 4200,
+    favCount: 890,
+    audioSource: null,
+    coverImage: 'linear-gradient(135deg, #134e4a 0%, #0d9488 50%, #14b8a6 100%)',
+    description: 'Lagu santai festival musim panas menikmati semangka segar di tepi sungai bersama kawanan capybara.',
+    jsonFile: 'sample-summer-watermelon.json'
+  }
+];
+
+/* ===================================================================
+   2. AUDIO ENGINE (WEB AUDIO SYNTH & SOUND EFFECTS)
    =================================================================== */
 
 class StudioAudioEngine {
@@ -245,97 +348,219 @@ class StudioAudioEngine {
 const audio = new StudioAudioEngine();
 
 /* ===================================================================
-   2. SONG PRESETS & LOAD PIPELINE
+   3. BEATMAP LISTING HUB RENDERER & AUDIO PREVIEWS
    =================================================================== */
 
-// Preset 1: Kimi no Na wa (Loaded from sample-kimi-no-na-wa.json or embedded)
-let PRESET_KIMI_NO_NA_WA = null;
+function renderBeatmapHubCards(filterCategory = 'all', searchQuery = '') {
+  const container = document.getElementById('beatmapGridContainer');
+  if (!container) return;
 
-// Preset 2: Onsen Afternoon
-const PRESET_ONSEN = {
-  formatVersion: "capybara-go-v1",
-  metadata: {
-    title: "Capybara Onsen Afternoon",
-    artist: "Capy Chillhop Collective",
-    genre: "Lo-Fi Onsen Beat",
-    bpm: 86,
-    duration: 34.0,
-    difficulty: "Normal",
-    author: "CapyDev",
-    description: "Lagu santai berendam di air hangat onsen."
-  },
-  synthAudio: {
-    enabled: true,
-    tempo: 86,
-    chords: [
-      { time: 0.0, chord: ["C4", "E4", "G4", "B4"], duration: 2.79 },
-      { time: 2.79, chord: ["A3", "C4", "E4", "G4"], duration: 2.79 },
-      { time: 5.58, chord: ["F3", "A3", "C4", "E4"], duration: 2.79 },
-      { time: 8.37, chord: ["G3", "B3", "D4", "F4"], duration: 2.79 }
-    ],
-    bass: [
-      { time: 0.0, pitch: "C2", duration: 1.39 },
-      { time: 1.39, pitch: "G2", duration: 1.39 }
-    ],
-    drums: [
-      { time: 0.0, type: "kick" }, { time: 0.70, type: "snare" }
-    ]
-  },
-  notes: [
-    { id: 1, time: 1.40, lane: 0, type: "tap", sound: "yuzu_pop" },
-    { id: 2, time: 2.09, lane: 1, type: "tap", sound: "water_splash" },
-    { id: 3, time: 2.79, lane: 2, type: "tap", sound: "paw_tap" },
-    { id: 4, time: 3.49, lane: 3, type: "tap", sound: "yuzu_pop" },
-    { id: 5, time: 4.18, lane: 1, type: "tap", sound: "water_splash" },
-    { id: 6, time: 4.88, lane: 0, type: "tap", sound: "paw_tap" },
-    { id: 7, time: 5.58, lane: 2, type: "hold", duration: 1.0, sound: "warm_onsen" },
-    { id: 8, time: 6.98, lane: 1, type: "tap", sound: "water_splash" },
-    { id: 9, time: 7.67, lane: 3, type: "burst", sound: "citrus_burst" }
-  ]
-};
+  const query = searchQuery.toLowerCase().trim();
+  let filtered = COMMUNITY_BEATMAPS.filter(m => {
+    const matchesCat = filterCategory === 'all' || m.category === filterCategory;
+    const matchesQuery = !query || 
+      m.title.toLowerCase().includes(query) || 
+      m.artist.toLowerCase().includes(query) || 
+      m.author.toLowerCase().includes(query);
+    return matchesCat && matchesQuery;
+  });
 
-// Preset 3: Citrus Rush
-const PRESET_RUSH = {
-  formatVersion: "capybara-go-v1",
-  metadata: {
-    title: "Capybara Citrus Rush!",
-    artist: "DJ Capy & The Crew",
-    genre: "Upbeat Dance",
-    bpm: 132,
-    duration: 30.0,
-    difficulty: "Hard",
-    author: "CapyDev",
-    description: "Lagu cepat bersemangat."
-  },
-  synthAudio: { enabled: true, tempo: 132 },
-  notes: [
-    { id: 1, time: 0.91, lane: 0, type: "tap", sound: "yuzu_pop" },
-    { id: 2, time: 1.36, lane: 1, type: "tap", sound: "paw_tap" },
-    { id: 3, time: 1.82, lane: 2, type: "tap", sound: "water_splash" },
-    { id: 4, time: 2.27, lane: 3, type: "burst", sound: "citrus_burst" }
-  ]
-};
-
-async function initDefaultSong() {
-  state.audioElement = document.getElementById('customAudioElement');
-
-  try {
-    const resp = await fetch('sample-kimi-no-na-wa.json');
-    if (resp.ok) {
-      PRESET_KIMI_NO_NA_WA = await resp.json();
-    }
-  } catch (e) {
-    console.warn('Failed to fetch sample-kimi-no-na-wa.json:', e);
+  // Sort
+  const sortVal = document.getElementById('hubSortSelect').value;
+  if (sortVal === 'difficulty') {
+    filtered.sort((a, b) => b.starRating - a.starRating);
+  } else if (sortVal === 'bpm') {
+    filtered.sort((a, b) => b.bpm - a.bpm);
+  } else if (sortVal === 'newest') {
+    filtered.reverse();
+  } else {
+    filtered.sort((a, b) => b.playCount - a.playCount);
   }
 
-  // Load Kimi no Na wa as primary default
-  if (PRESET_KIMI_NO_NA_WA) {
-    loadSong(PRESET_KIMI_NO_NA_WA, false);
-    setupAudioTrack('audio/kimi-no-na-wa.mp3', 'RADWIMPS — Nandemonaiya (Kimi no Na wa)');
+  container.innerHTML = filtered.map(mapItem => {
+    const starClass = getStarClass(mapItem.starRating);
+    const isPlayingPreview = state.previewAudioId === mapItem.id;
+
+    return `
+      <div class="osu-map-card" data-id="${mapItem.id}">
+        <!-- Cover Artwork Banner -->
+        <div class="card-banner-header" style="background-image: ${mapItem.coverImage};">
+          <div class="card-banner-overlay"></div>
+          
+          <!-- Instant Audio Preview Button -->
+          <button class="card-audio-preview-btn ${isPlayingPreview ? 'playing' : ''}" data-preview-id="${mapItem.id}" title="Dengarkan Pratinjau Lagu">
+            ${isPlayingPreview ? '⏸' : '▶'}
+          </button>
+
+          <div class="card-header-titles">
+            <h3 class="card-title-main">${mapItem.title}</h3>
+            <p class="card-artist-sub">${mapItem.artist}</p>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body-details">
+          <div class="card-meta-row">
+            <span class="mapper-credit">mapped by <strong>${mapItem.author}</strong></span>
+            <span class="star-rating-pill ${starClass}">★ ${mapItem.starRating.toFixed(1)} ${mapItem.difficulty}</span>
+          </div>
+
+          <div class="diff-pips-row" title="Difficulty tier">
+            <span class="diff-pip" style="background: ${getStarColor(mapItem.starRating)};"></span>
+            <span class="diff-pip" style="background: ${getStarColor(mapItem.starRating)};"></span>
+            <span class="diff-pip" style="background: ${getStarColor(mapItem.starRating)};"></span>
+          </div>
+
+          <div class="card-metrics-strip">
+            <span class="metric-item">⏱️ ${formatTimeShort(mapItem.duration)}</span>
+            <span class="metric-item">🥁 ${mapItem.bpm} BPM</span>
+            <span class="metric-item">🎯 ${mapItem.notesCount} notes</span>
+            <span class="metric-item">▶ ${mapItem.playCount.toLocaleString()}</span>
+            <span class="metric-item">❤️ ${mapItem.favCount.toLocaleString()}</span>
+          </div>
+
+          <!-- Actions: Download & Open in Studio -->
+          <div class="card-actions-row">
+            <button class="btn btn-sm btn-primary btn-block btn-open-editor" data-id="${mapItem.id}">
+              ✏️ Buka di Studio
+            </button>
+            <button class="btn btn-sm btn-dark btn-block btn-download-map" data-id="${mapItem.id}">
+              📥 Download (.json)
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach Card Event Listeners
+  attachCardEvents();
+}
+
+function getStarClass(stars) {
+  if (stars < 2.0) return 'star-easy';
+  if (stars < 3.0) return 'star-normal';
+  if (stars < 4.0) return 'star-hard';
+  if (stars < 5.0) return 'star-insane';
+  return 'star-master';
+}
+
+function getStarColor(stars) {
+  if (stars < 2.0) return '#38bdf8';
+  if (stars < 3.0) return '#10b981';
+  if (stars < 4.0) return '#f59e0b';
+  if (stars < 5.0) return '#f43f5e';
+  return '#a855f7';
+}
+
+function attachCardEvents() {
+  // Preview Play buttons
+  document.querySelectorAll('.card-audio-preview-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const mapId = btn.dataset.previewId;
+      toggleAudioPreview(mapId);
+    });
+  });
+
+  // Open in Editor buttons
+  document.querySelectorAll('.btn-open-editor').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mapId = btn.dataset.id;
+      loadMapById(mapId);
+      switchView('editor');
+    });
+  });
+
+  // Download buttons
+  document.querySelectorAll('.btn-download-map').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mapId = btn.dataset.id;
+      downloadMapById(mapId);
+    });
+  });
+}
+
+function toggleAudioPreview(mapId) {
+  audio.init();
+  const mapItem = COMMUNITY_BEATMAPS.find(m => m.id === mapId);
+  if (!mapItem) return;
+
+  if (state.previewAudioId === mapId) {
+    // Stop preview
+    if (state.audioElement) state.audioElement.pause();
+    state.previewAudioId = null;
+    renderBeatmapHubCards(getActiveCategory(), document.getElementById('hubSearchInput').value);
+    return;
+  }
+
+  // Play preview
+  state.previewAudioId = mapId;
+  renderBeatmapHubCards(getActiveCategory(), document.getElementById('hubSearchInput').value);
+
+  if (mapItem.audioSource) {
+    state.audioElement.src = mapItem.audioSource;
+    state.audioElement.currentTime = 60; // Jump to pre-chorus/chorus for preview!
+    state.audioElement.play().catch(e => console.warn(e));
   } else {
-    loadSong(PRESET_ONSEN, false);
+    // Synth preview for a few seconds
+    if (state.audioElement) state.audioElement.pause();
+    audio.playChord(["C4", "E4", "G4", "B4"], 2.0);
+    audio.playDrum('kick');
   }
 }
+
+function downloadMapById(mapId) {
+  const mapItem = COMMUNITY_BEATMAPS.find(m => m.id === mapId);
+  if (!mapItem) return;
+
+  fetch(mapItem.jsonFile)
+    .then(r => r.json())
+    .then(json => {
+      const jsonStr = JSON.stringify(json, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${mapItem.id}-beatmap.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`📥 Beatmap "${mapItem.title}" berhasil diunduh!`);
+    })
+    .catch(err => {
+      alert(`Gagal download map: ${err.message}`);
+    });
+}
+
+async function loadMapById(mapId) {
+  const mapItem = COMMUNITY_BEATMAPS.find(m => m.id === mapId);
+  if (!mapItem) return;
+
+  try {
+    const resp = await fetch(mapItem.jsonFile);
+    if (!resp.ok) throw new Error('File beatmap tidak ditemukan');
+    const json = await resp.json();
+    loadSong(json);
+
+    if (mapItem.audioSource) {
+      setupAudioTrack(mapItem.audioSource, `${mapItem.artist} — ${mapItem.title}`);
+    } else {
+      document.getElementById('footerAudioBadge').textContent = '🎵 Source: Built-in Synth Audio';
+    }
+    showToast(`🌸 Beatmap "${mapItem.title}" siap diedit!`);
+  } catch (err) {
+    console.warn('Load err:', err);
+  }
+}
+
+function getActiveCategory() {
+  const activeBtn = document.querySelector('.filter-pill.active');
+  return activeBtn ? activeBtn.dataset.category : 'all';
+}
+
+/* ===================================================================
+   4. STUDIO SEQUENCER ENGINE (DAW & EDITOR)
+   =================================================================== */
 
 function loadSong(songData, notify = true) {
   state.song = JSON.parse(JSON.stringify(songData));
@@ -345,20 +570,18 @@ function loadSong(songData, notify = true) {
   state.currentTime = 0;
   state.selectedNoteId = null;
 
-  // Sync inputs & HUD
   updateHeaderAndHUD();
   updateTimelineCanvas();
   updateInspector();
 
   if (notify) {
-    showToast(`🌸 Map "${state.song.metadata.title}" dimuat!`);
+    showToast(`Map "${state.song.metadata.title}" dimuat.`);
   }
 }
 
 function setupAudioTrack(srcUrl, titleLabel) {
   if (!state.audioElement) state.audioElement = document.getElementById('customAudioElement');
   state.audioElement.src = srcUrl;
-  state.isCustomAudio = true;
 
   state.audioElement.onloadedmetadata = () => {
     state.song.metadata.duration = Math.round(state.audioElement.duration);
@@ -371,6 +594,9 @@ function setupAudioTrack(srcUrl, titleLabel) {
 
 function updateHeaderAndHUD() {
   const meta = state.song.metadata;
+  document.getElementById('headerSongTitle').textContent = meta.title;
+  document.getElementById('headerSongMeta').textContent = `${meta.artist || 'RADWIMPS'} • ${meta.bpm} BPM • ${state.song.notes.length} notes`;
+
   document.getElementById('lcdTotalTime').textContent = formatTimePrecise(meta.duration);
   document.getElementById('lcdBpmBadge').textContent = `${meta.bpm} BPM`;
   document.getElementById('lcdNotesCount').textContent = `${state.song.notes.length} NOTES`;
@@ -382,10 +608,6 @@ function updateHeaderAndHUD() {
 
   updatePromptTemplateText();
 }
-
-/* ===================================================================
-   3. TRANSPORT PLAYBACK & SYNCHRONIZATION
-   =================================================================== */
 
 let lastTimestamp = null;
 
@@ -403,24 +625,19 @@ function startPlayback() {
   lastTimestamp = performance.now();
 
   if (state.audioElement && state.audioElement.src && !state.audioMuted) {
+    state.audioElement.playbackRate = state.playbackSpeed;
     state.audioElement.currentTime = state.currentTime;
-    state.audioElement.play().catch(e => console.warn('Audio play notice:', e));
+    state.audioElement.play().catch(e => console.warn('Audio notice:', e));
   }
 
   document.getElementById('transportPlayIcon').textContent = '⏸';
-  document.getElementById('btnTransportPlay').classList.add('playing');
-
   requestAnimationFrame(transportLoop);
 }
 
 function pausePlayback() {
   state.isPlaying = false;
-  if (state.audioElement) {
-    state.audioElement.pause();
-  }
-
+  if (state.audioElement) state.audioElement.pause();
   document.getElementById('transportPlayIcon').textContent = '▶';
-  document.getElementById('btnTransportPlay').classList.remove('playing');
 }
 
 function stopPlayback() {
@@ -428,10 +645,7 @@ function stopPlayback() {
   state.currentTime = 0;
   state.lastMetronomeBeat = -1;
 
-  if (state.audioElement) {
-    state.audioElement.currentTime = 0;
-  }
-
+  if (state.audioElement) state.audioElement.currentTime = 0;
   updateTimeDisplays();
   updateTimelineCanvas();
 }
@@ -444,7 +658,6 @@ function transportLoop(timestamp) {
 
   const prevTime = state.currentTime;
 
-  // Synchronize with audio element if playing custom audio
   if (state.audioElement && !state.audioElement.paused && state.audioElement.duration) {
     state.currentTime = state.audioElement.currentTime;
   } else {
@@ -453,22 +666,18 @@ function transportLoop(timestamp) {
 
   const duration = state.song.metadata.duration;
 
-  // Auto-stop at end of song
   if (state.currentTime >= duration) {
     stopPlayback();
-    showToast('✨ Pratinjau lagu selesai.');
+    showToast('✨ Selesai memutar lagu.');
     return;
   }
 
-  // Trigger synth music if enabled
   if (state.song.synthAudio && state.song.synthAudio.enabled && !state.audioMuted) {
     checkSynthTriggers(prevTime, state.currentTime);
   }
 
-  // Trigger note hit sound effects when playhead crosses a note
   checkNoteTriggers(prevTime, state.currentTime);
 
-  // Metronome tick
   if (state.metronome) {
     const beatInterval = 60 / state.song.metadata.bpm;
     const currentBeat = Math.floor(state.currentTime / beatInterval);
@@ -523,7 +732,7 @@ function updateTimeDisplays() {
 }
 
 /* ===================================================================
-   4. SEQUENCER CANVAS DAW (RENDERER & INTERACTIVE EDITING)
+   5. SEQUENCER CANVAS (OSU! STYLE QUANTIZE & NOTES)
    =================================================================== */
 
 function updateTimelineCanvas() {
@@ -545,12 +754,12 @@ function updateTimelineCanvas() {
   const headerHeight = 36;
   const laneHeight = (h - headerHeight) / 4;
 
-  // Background Obsidian
-  ctx.fillStyle = '#090b0e';
+  // Obsidian Background
+  ctx.fillStyle = '#080a0e';
   ctx.fillRect(0, 0, w, h);
 
   // Top Ruler Background
-  ctx.fillStyle = '#101319';
+  ctx.fillStyle = '#0f1218';
   ctx.fillRect(0, 0, w, headerHeight);
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.lineWidth = 1;
@@ -559,7 +768,7 @@ function updateTimelineCanvas() {
   ctx.lineTo(w, headerHeight);
   ctx.stroke();
 
-  // Grid calculations
+  // Grid calculations (osu! color-coded beat snap)
   const secondsPerBeat = 60 / bpm;
   const snapInterval = secondsPerBeat / state.snapDiv;
   const totalSnaps = Math.ceil(duration / snapInterval);
@@ -570,15 +779,14 @@ function updateTimelineCanvas() {
     const isQuarterBeat = s % state.snapDiv === 0;
     const isBar = s % (state.snapDiv * 4) === 0;
 
-    // Grid lines
     if (isBar) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.8;
     } else if (isQuarterBeat) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#f43f5e'; // Red (1/2 beat in osu)
+      ctx.lineWidth = 1.2;
     } else {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
+      ctx.strokeStyle = '#38bdf8'; // Blue (1/4 beat in osu)
       ctx.lineWidth = 0.8;
     }
 
@@ -587,12 +795,12 @@ function updateTimelineCanvas() {
     ctx.lineTo(x, h);
     ctx.stroke();
 
-    // Bar Numbers & Timestamp in Ruler
+    // Bar number & Time label in ruler
     if (isBar && x < w - 60) {
       const barNum = Math.floor(s / (state.snapDiv * 4)) + 1;
       ctx.fillStyle = '#fbbf24';
       ctx.font = 'bold 10px JetBrains Mono, monospace';
-      ctx.fillText(`${barNum}`, x + 5, 15);
+      ctx.fillText(`${barNum}`, x + 5, 14);
 
       ctx.fillStyle = '#6b7280';
       ctx.font = '9px JetBrains Mono, monospace';
@@ -600,15 +808,13 @@ function updateTimelineCanvas() {
     }
   }
 
-  // Draw 4 Track Lane Separators & Subtle Shading
+  // Draw 4 Track Lane Separators
   for (let i = 0; i < 4; i++) {
     const ly = headerHeight + i * laneHeight;
-
     if (i % 2 === 1) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.012)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
       ctx.fillRect(0, ly, w, laneHeight);
     }
-
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -617,7 +823,7 @@ function updateTimelineCanvas() {
     ctx.stroke();
   }
 
-  // Draw Notes on Sequencer
+  // Draw Notes
   state.song.notes.forEach(note => {
     const nx = note.time * pixelsPerSecond;
     const ny = headerHeight + note.lane * laneHeight + 6;
@@ -631,26 +837,15 @@ function updateTimelineCanvas() {
     if (note.type === 'hold') {
       const holdW = (note.duration || 1.0) * pixelsPerSecond;
       const tailGrad = ctx.createLinearGradient(nx, ny, nx + holdW, ny);
-      tailGrad.addColorStop(0, track.color + 'aa');
-      tailGrad.addColorStop(1, track.color + '33');
+      tailGrad.addColorStop(0, track.color + 'bb');
+      tailGrad.addColorStop(1, track.color + '44');
 
       ctx.fillStyle = tailGrad;
       ctx.fillRect(nx, ny, holdW, nh);
 
-      // Border outline
       ctx.strokeStyle = track.color;
       ctx.lineWidth = 1.5;
       ctx.strokeRect(nx, ny, holdW, nh);
-
-      // Grip stripes
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 1;
-      for (let sx = nx + 12; sx < nx + holdW - 6; sx += 12) {
-        ctx.beginPath();
-        ctx.moveTo(sx, ny + 4);
-        ctx.lineTo(sx, ny + nh - 4);
-        ctx.stroke();
-      }
     }
 
     // Main Note Body Card
@@ -667,14 +862,12 @@ function updateTimelineCanvas() {
       ctx.fillRect(nx - cardW / 2, ny, cardW, nh);
     }
 
-    // Active Selection Ring
     if (isSelected) {
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 3;
       ctx.stroke();
     }
 
-    // Inner Icon
     ctx.shadowBlur = 0;
     ctx.fillStyle = isSelected ? '#000' : '#fff';
     ctx.font = '16px sans-serif';
@@ -687,15 +880,14 @@ function updateTimelineCanvas() {
 
   // Playhead Scrubber Needle
   const playheadX = state.currentTime * pixelsPerSecond;
-  ctx.strokeStyle = '#f43f5e';
+  ctx.strokeStyle = '#ff66aa';
   ctx.lineWidth = 2.5;
   ctx.beginPath();
   ctx.moveTo(playheadX, 0);
   ctx.lineTo(playheadX, h);
   ctx.stroke();
 
-  // Pointer Head
-  ctx.fillStyle = '#f43f5e';
+  ctx.fillStyle = '#ff66aa';
   ctx.beginPath();
   ctx.moveTo(playheadX - 7, 0);
   ctx.lineTo(playheadX + 7, 0);
@@ -714,7 +906,7 @@ function handleCanvasClick(e) {
   const headerHeight = 36;
   const laneHeight = (canvas.height - headerHeight) / 4;
 
-  // 1. Click on Header Ruler: Scrub Audio Position
+  // Click on Header Ruler: Scrub
   if (clickY <= headerHeight) {
     const targetTime = Math.max(0, Math.min(state.song.metadata.duration, clickX / pixelsPerSecond));
     state.currentTime = targetTime;
@@ -724,7 +916,7 @@ function handleCanvasClick(e) {
     return;
   }
 
-  // 2. Click in Tracks
+  // Click in Tracks
   const clickedLane = Math.floor((clickY - headerHeight) / laneHeight);
   if (clickedLane < 0 || clickedLane > 3) return;
 
@@ -733,17 +925,14 @@ function handleCanvasClick(e) {
   const snapInterval = secondsPerBeat / state.snapDiv;
   const snappedTime = Math.round(rawTime / snapInterval) * snapInterval;
 
-  // Check if clicked an existing note
   const existing = state.song.notes.find(n => n.lane === clickedLane && Math.abs(n.time - rawTime) * pixelsPerSecond < 20);
 
   if (existing) {
-    // Select this note
     state.selectedNoteId = existing.id;
     audio.playSfx(existing.sound || TRACKS[existing.lane].sfx);
     updateInspector();
     updateTimelineCanvas();
   } else {
-    // Add new note
     const newNote = {
       id: Date.now(),
       time: parseFloat(snappedTime.toFixed(3)),
@@ -760,7 +949,7 @@ function handleCanvasClick(e) {
     state.selectedNoteId = newNote.id;
 
     audio.playSfx(newNote.sound);
-    showToast(`Note diletakkan di Track ${clickedLane} (${snappedTime.toFixed(2)}s)`);
+    showToast(`Note ditaruh di Track ${clickedLane} (${snappedTime.toFixed(2)}s)`);
 
     updateHeaderAndHUD();
     updateInspector();
@@ -794,17 +983,13 @@ function handleCanvasDblClick(e) {
   }
 }
 
-/* ===================================================================
-   5. NOTE INSPECTOR (DETAIL EDITOR)
-   =================================================================== */
-
 function updateInspector() {
   const container = document.getElementById('inspectorContent');
   const badge = document.getElementById('inspectorStatusBadge');
 
   if (!state.selectedNoteId) {
     badge.textContent = 'NONE';
-    container.className = 'inspector-empty';
+    container.className = 'inspector-empty-wrap';
     container.innerHTML = '<p>Klik note manapun di timeline untuk membuka editor properti presisi.</p>';
     return;
   }
@@ -817,37 +1002,37 @@ function updateInspector() {
   }
 
   badge.textContent = `ID #${note.id.toString().slice(-4)}`;
-  container.className = 'inspector-grid';
+  container.className = 'dock-card';
   container.innerHTML = `
-    <div class="inspector-row">
-      <label>Timestamp (s):</label>
-      <input type="number" id="inspTimeInput" class="dock-input-num" value="${note.time}" step="0.05" min="0">
+    <div class="form-row-compact">
+      <label>Waktu (detik):</label>
+      <input type="number" id="inspTimeInput" class="pro-input-num" value="${note.time}" step="0.05" min="0">
     </div>
-    <div class="inspector-row">
+    <div class="form-row-compact">
       <label>Track Lane:</label>
-      <select id="inspLaneSelect" class="dock-select">
+      <select id="inspLaneSelect" class="pro-select">
         <option value="0" ${note.lane === 0 ? 'selected' : ''}>🍊 Track 0 (Yuzu)</option>
         <option value="1" ${note.lane === 1 ? 'selected' : ''}>💧 Track 1 (Onsen)</option>
         <option value="2" ${note.lane === 2 ? 'selected' : ''}>🐾 Track 2 (Paw)</option>
         <option value="3" ${note.lane === 3 ? 'selected' : ''}>⭐ Track 3 (Citrus)</option>
       </select>
     </div>
-    <div class="inspector-row">
-      <label>Note Type:</label>
-      <select id="inspTypeSelect" class="dock-select">
+    <div class="form-row-compact">
+      <label>Tipe Note:</label>
+      <select id="inspTypeSelect" class="pro-select">
         <option value="tap" ${note.type === 'tap' ? 'selected' : ''}>Tap</option>
         <option value="hold" ${note.type === 'hold' ? 'selected' : ''}>Hold</option>
         <option value="burst" ${note.type === 'burst' ? 'selected' : ''}>Burst</option>
       </select>
     </div>
     ${note.type === 'hold' ? `
-    <div class="inspector-row">
-      <label>Duration (s):</label>
-      <input type="number" id="inspDurationInput" class="dock-input-num" value="${note.duration || 1.0}" step="0.1" min="0.2">
+    <div class="form-row-compact">
+      <label>Durasi Tahan:</label>
+      <input type="number" id="inspDurationInput" class="pro-input-num" value="${note.duration || 1.0}" step="0.1" min="0.2">
     </div>` : ''}
     <div style="display: flex; gap: 6px; margin-top: 8px;">
       <button class="btn btn-xs btn-primary btn-block" id="btnInspSave">Terapkan</button>
-      <button class="btn btn-xs btn-danger-dark btn-block" id="btnInspDel">Hapus Note</button>
+      <button class="btn btn-xs btn-danger-dark btn-block" id="btnInspDel">Hapus</button>
     </div>
   `;
 
@@ -861,7 +1046,7 @@ function updateInspector() {
       note.duration = durEl ? (parseFloat(durEl.value) || 1.0) : 1.0;
     }
     state.song.notes.sort((a, b) => a.time - b.time);
-    showToast('✅ Note berhasil diupdate.');
+    showToast('✅ Note diperbarui.');
     updateInspector();
     updateTimelineCanvas();
   });
@@ -881,7 +1066,7 @@ function updateInspector() {
 }
 
 /* ===================================================================
-   6. BATCH OPERATIONS & TAP BPM
+   6. BATCH OPERATIONS & BPM TAP
    =================================================================== */
 
 function mirrorTracks() {
@@ -934,56 +1119,7 @@ function handleBpmTap() {
 }
 
 /* ===================================================================
-   7. FILE IMPORT & EXPORT
-   =================================================================== */
-
-function handleJsonUpload(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const parsed = JSON.parse(e.target.result);
-      if (!parsed.notes || !parsed.metadata) throw new Error('Struktur beatmap capybara-go-v1 tidak valid.');
-      loadSong(parsed);
-      closeModals();
-      showToast(`📁 File script "${file.name}" berhasil dimuat!`);
-    } catch (err) {
-      alert(`Gagal memuat JSON: ${err.message}`);
-    }
-  };
-  reader.readAsText(file);
-}
-
-function handleAudioUpload(file) {
-  if (!file) return;
-  const url = URL.createObjectURL(file);
-  setupAudioTrack(url, file.name);
-  closeModals();
-  showToast(`🎵 Lagu audio "${file.name}" dipasang!`);
-}
-
-function exportJson() {
-  const jsonStr = JSON.stringify(state.song, null, 2);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const safeTitle = state.song.metadata.title.toLowerCase().replace(/[^a-z0-9]/g, '-');
-  a.href = url;
-  a.download = `${safeTitle}-beatmap.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('💾 Script JSON berhasil diunduh!');
-}
-
-function copyJsonToClipboard() {
-  const jsonStr = JSON.stringify(state.song, null, 2);
-  navigator.clipboard.writeText(jsonStr).then(() => {
-    showToast('📋 Script JSON berhasil disalin ke clipboard!');
-  }).catch(() => alert('Gagal copy clipboard.'));
-}
-
-/* ===================================================================
-   8. AI AUTO-MAPPER ENGINE
+   7. AI AUTO-MAPPER ENGINE (KALO MAGER)
    =================================================================== */
 
 function initAiConfig() {
@@ -1109,7 +1245,7 @@ async function runAiGeneration() {
 
     if (resultJson && resultJson.notes && resultJson.metadata) {
       loadSong(resultJson);
-      closeModals();
+      switchView('editor');
       showToast(`✨ Beatmap AI "${resultJson.metadata.title}" berhasil dibuat!`);
     } else {
       throw new Error('Format output JSON dari AI tidak sesuai skema.');
@@ -1182,21 +1318,85 @@ function runProceduralGeneration() {
   };
 
   loadSong(generated);
-  closeModals();
+  switchView('editor');
   showToast(`🎲 Beatmap "${title}" berhasil disusun otomatis!`);
 }
 
 /* ===================================================================
-   9. UI HELPERS & MODALS
+   8. FILE IMPORT / EXPORT
    =================================================================== */
+
+function handleJsonUpload(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.notes || !parsed.metadata) throw new Error('Struktur beatmap capybara-go-v1 tidak valid.');
+      loadSong(parsed);
+      closeModals();
+      switchView('editor');
+      showToast(`📁 File script "${file.name}" berhasil dimuat!`);
+    } catch (err) {
+      alert(`Gagal memuat JSON: ${err.message}`);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function handleAudioUpload(file) {
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  setupAudioTrack(url, file.name);
+  closeModals();
+  switchView('editor');
+  showToast(`🎵 Lagu audio "${file.name}" dipasang!`);
+}
+
+function exportCurrentJson() {
+  const jsonStr = JSON.stringify(state.song, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeTitle = state.song.metadata.title.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  a.href = url;
+  a.download = `${safeTitle}-beatmap.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Script JSON berhasil diunduh!');
+}
+
+function copyJsonToClipboard() {
+  const jsonStr = JSON.stringify(state.song, null, 2);
+  navigator.clipboard.writeText(jsonStr).then(() => {
+    showToast('📋 Script JSON berhasil disalin ke clipboard!');
+  }).catch(() => alert('Gagal copy clipboard.'));
+}
+
+/* ===================================================================
+   9. VIEW SWITCHER & MODALS
+   =================================================================== */
+
+function switchView(viewName) {
+  state.currentView = viewName;
+
+  document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === viewName);
+  });
+
+  document.querySelectorAll('.view-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `view-${viewName}`);
+  });
+
+  if (viewName === 'editor') {
+    setTimeout(updateTimelineCanvas, 50);
+  } else if (viewName === 'hub') {
+    renderBeatmapHubCards(getActiveCategory(), document.getElementById('hubSearchInput').value);
+  }
+}
 
 function openUploadModal() {
   document.getElementById('uploadModalOverlay').classList.add('active');
-}
-
-function openAiModal() {
-  document.getElementById('aiModalOverlay').classList.add('active');
-  updatePromptTemplateText();
 }
 
 function closeModals() {
@@ -1230,12 +1430,51 @@ function formatTimeShort(seconds) {
    =================================================================== */
 
 window.addEventListener('DOMContentLoaded', () => {
-  initDefaultSong();
-  initAiConfig();
+  state.audioElement = document.getElementById('customAudioElement');
 
-  // Transport Buttons
+  // Load Kimi no Na wa by default
+  loadMapById('kimi-no-na-wa');
+  initAiConfig();
+  renderBeatmapHubCards('all');
+
+  // Navigation Tabs
+  document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+  document.getElementById('navLogoBtn').addEventListener('click', () => switchView('hub'));
+
+  // Hub Filter Buttons
+  document.querySelectorAll('.filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderBeatmapHubCards(btn.dataset.category, document.getElementById('hubSearchInput').value);
+    });
+  });
+
+  // Hub Search Input
+  document.getElementById('hubSearchInput').addEventListener('input', (e) => {
+    renderBeatmapHubCards(getActiveCategory(), e.target.value);
+  });
+
+  document.getElementById('hubSortSelect').addEventListener('change', () => {
+    renderBeatmapHubCards(getActiveCategory(), document.getElementById('hubSearchInput').value);
+  });
+
+  // Editor Transport Controls
   document.getElementById('btnTransportPlay').addEventListener('click', togglePlayback);
   document.getElementById('btnTransportStop').addEventListener('click', stopPlayback);
+
+  // Speed Multiplier Buttons (0.5x, 0.75x, 1x)
+  document.querySelectorAll('.speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.playbackSpeed = parseFloat(btn.dataset.speed);
+      if (state.audioElement) state.audioElement.playbackRate = state.playbackSpeed;
+      showToast(`Kecepatan pratinjau: ${state.playbackSpeed}x`);
+    });
+  });
 
   document.getElementById('btnToggleMetronome').addEventListener('click', () => {
     state.metronome = !state.metronome;
@@ -1251,32 +1490,9 @@ window.addEventListener('DOMContentLoaded', () => {
     showToast(state.audioMuted ? '🔇 Audio dibisukan' : '🔊 Audio bersuara');
   });
 
-  // Song Selector Dropdown
-  document.getElementById('headerSongSelect').addEventListener('change', (e) => {
-    const val = e.target.value;
-    if (val === 'kimi-no-na-wa') {
-      if (PRESET_KIMI_NO_NA_WA) {
-        loadSong(PRESET_KIMI_NO_NA_WA);
-        setupAudioTrack('audio/kimi-no-na-wa.mp3', 'RADWIMPS — Nandemonaiya');
-      }
-    } else if (val === 'onsen') {
-      loadSong(PRESET_ONSEN);
-      document.getElementById('footerAudioBadge').textContent = '🎵 Source: Lo-Fi Synth Audio';
-    } else if (val === 'rush') {
-      loadSong(PRESET_RUSH);
-      document.getElementById('footerAudioBadge').textContent = '🎵 Source: 132 BPM Synth Audio';
-    } else if (val === 'blank') {
-      const blank = {
-        formatVersion: "capybara-go-v1",
-        metadata: { title: "Map Baru", artist: "Artist", bpm: 90, duration: 60, difficulty: "Normal" },
-        synthAudio: { enabled: false },
-        notes: []
-      };
-      loadSong(blank);
-    }
-  });
+  document.getElementById('btnQuickExport').addEventListener('click', exportCurrentJson);
 
-  // Canvas Interactions
+  // Canvas Sequencer Events
   const canvas = document.getElementById('timelineCanvas');
   canvas.addEventListener('click', handleCanvasClick);
   canvas.addEventListener('dblclick', handleCanvasDblClick);
@@ -1294,6 +1510,10 @@ window.addEventListener('DOMContentLoaded', () => {
       selectTool('hold');
     } else if (e.code === 'Digit3') {
       selectTool('burst');
+    } else if (e.code === 'KeyM') {
+      state.metronome = !state.metronome;
+      document.getElementById('btnToggleMetronome').classList.toggle('active', state.metronome);
+      showToast(state.metronome ? '⏲️ Metronom diaktifkan' : '⏲️ Metronom dimatikan');
     } else if (e.code === 'Delete' || e.code === 'Backspace') {
       if (state.selectedNoteId) {
         const idx = state.song.notes.findIndex(n => n.id === state.selectedNoteId);
@@ -1311,14 +1531,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function selectTool(toolName) {
     state.selectedTool = toolName;
-    document.querySelectorAll('.palette-btn').forEach(btn => {
+    document.querySelectorAll('.tool-btn-pro').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tool === toolName);
     });
-    document.getElementById('holdDurationSettings').style.display = toolName === 'hold' ? 'flex' : 'none';
+    document.getElementById('holdDurationSettings').style.display = toolName === 'hold' ? 'block' : 'none';
   }
 
-  // Tool Palette Clicks
-  document.querySelectorAll('.palette-btn').forEach(btn => {
+  document.querySelectorAll('.tool-btn-pro').forEach(btn => {
     btn.addEventListener('click', () => selectTool(btn.dataset.tool));
   });
 
@@ -1327,12 +1546,20 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('holdDurationVal').textContent = `${state.holdDuration.toFixed(1)}s`;
   });
 
-  // Quantize & Zoom
+  // Quantize Snap Selector
   document.getElementById('editSnapSelect').addEventListener('change', (e) => {
     state.snapDiv = parseInt(e.target.value);
+    const snapIndicator = document.getElementById('snapColorIndicator');
+    snapIndicator.textContent = `1/${state.snapDiv}`;
+    if (state.snapDiv === 2) snapIndicator.style.background = '#f43f5e';
+    else if (state.snapDiv === 4) snapIndicator.style.background = '#38bdf8';
+    else if (state.snapDiv === 8) snapIndicator.style.background = '#fbbf24';
+    else if (state.snapDiv === 16) snapIndicator.style.background = '#a855f7';
+    else snapIndicator.style.background = '#fff';
     updateTimelineCanvas();
   });
 
+  // Zoom
   document.getElementById('btnZoomIn').addEventListener('click', () => {
     state.zoom = Math.min(3.0, state.zoom + 0.25);
     document.getElementById('zoomDisplay').textContent = `${state.zoom.toFixed(1)}x`;
@@ -1372,16 +1599,14 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Batch Operations
+  // Batch Buttons
   document.getElementById('btnMirrorLanes').addEventListener('click', mirrorTracks);
   document.getElementById('btnShiftNotesForward').addEventListener('click', shiftNotes);
   document.getElementById('btnClearAllNotes').addEventListener('click', clearAllNotes);
 
   // Modals
-  document.getElementById('btnOpenUploadModal').addEventListener('click', openUploadModal);
+  document.getElementById('btnHeaderUpload').addEventListener('click', openUploadModal);
   document.getElementById('btnCloseUploadModal').addEventListener('click', closeModals);
-  document.getElementById('btnOpenAiModal').addEventListener('click', openAiModal);
-  document.getElementById('btnCloseAiModal').addEventListener('click', closeModals);
 
   document.querySelectorAll('.modal-overlay').forEach(modal => {
     modal.addEventListener('click', (e) => {
@@ -1400,9 +1625,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.target.files.length > 0) handleAudioUpload(e.target.files[0]);
   });
 
-  // Export Handlers
-  document.getElementById('btnExportJsonFile').addEventListener('click', exportJson);
-  document.getElementById('btnModalExportJson').addEventListener('click', exportJson);
+  // Export
+  document.getElementById('btnModalExportJson').addEventListener('click', exportCurrentJson);
   document.getElementById('btnModalCopyJson').addEventListener('click', copyJsonToClipboard);
 
   // AI Generator Handlers
@@ -1434,7 +1658,7 @@ window.addEventListener('DOMContentLoaded', () => {
     try {
       const parsed = JSON.parse(val.replace(/```json/g, '').replace(/```/g, '').trim());
       loadSong(parsed);
-      closeModals();
+      switchView('editor');
       showToast('📥 Berhasil memuat script JSON hasil AI!');
     } catch (e) {
       alert(`Format JSON tidak valid: ${e.message}`);

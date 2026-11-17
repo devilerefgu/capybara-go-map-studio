@@ -1,0 +1,46 @@
+{
+  "formatVersion": "capybara-go-v1",
+  "metadata": {
+    "title": "Summer Watermelon Festival",
+    "artist": "Capy Melons",
+    "genre": "Relaxed Summer Breeze",
+    "bpm": 78,
+    "duration": 36.0,
+    "difficulty": "Easy",
+    "starRating": 1.8,
+    "author": "MelonLover",
+    "description": "Lagu santai festival musim panas menikmati semangka segar di tepi sungai bersama kawanan capybara."
+  },
+  "synthAudio": {
+    "enabled": true,
+    "tempo": 78,
+    "chords": [
+      { "time": 0.0, "chord": ["F4", "A4", "C5"], "duration": 3.07 },
+      { "time": 3.07, "chord": ["D4", "F4", "A4"], "duration": 3.07 },
+      { "time": 6.15, "chord": ["Bb3", "D4", "F4"], "duration": 3.07 },
+      { "time": 9.23, "chord": ["C4", "E4", "G4"], "duration": 3.07 }
+    ],
+    "bass": [
+      { "time": 0.0, pitch: "F2", duration: 1.53 },
+      { "time": 1.53, pitch: "C2", duration: 1.53 },
+      { "time": 3.07, pitch: "D2", duration: 1.53 },
+      { "time": 4.61, pitch: "A1", duration: 1.53 }
+    ],
+    "drums": [
+      { "time": 0.0, "type": "kick" }, { "time": 0.77, "type": "snare" },
+      { "time": 1.54, "type": "kick" }, { "time": 2.31, "type": "snare" }
+    ]
+  },
+  "notes": [
+    { "id": 1, "time": 1.54, "lane": 0, "type": "tap", "sound": "yuzu_pop" },
+    { "id": 2, "time": 3.08, "lane": 1, "type": "tap", "sound": "water_splash" },
+    { "id": 3, "time": 4.61, "lane": 2, "type": "tap", "sound": "paw_tap" },
+    { "id": 4, "time": 6.15, "lane": 3, "type": "tap", "sound": "citrus_burst" },
+    { "id": 5, "time": 7.69, "lane": 1, "type": "hold", "duration": 1.4, "sound": "warm_onsen" },
+    { "id": 6, "time": 9.23, "lane": 0, "type": "tap", "sound": "yuzu_pop" },
+    { "id": 7, "time": 10.77, "lane": 2, "type": "tap", "sound": "paw_tap" },
+    { "id": 8, "time": 12.31, "lane": 3, "type": "burst", "sound": "citrus_burst" },
+    { "id": 9, "time": 13.85, "lane": 1, "type": "tap", "sound": "water_splash" },
+    { "id": 10, "time": 15.38, "lane": 0, "type": "hold", "duration": 1.5, "sound": "warm_onsen" }
+  ]
+}
